@@ -1,0 +1,23 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="Academic Free License v3.0"
+
+[[mods]]
+modId="entityeraser"
+version="0.0.4"
+displayName="entityeraser"
+displayURL=""
+credits=""
+authors="apphhzp"
+description="一个秒杀MOD"
+
+[[dependencies.entityeraser]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1]"
+    ordering="NONE"
+    side="BOTH"
+
+
+
+
