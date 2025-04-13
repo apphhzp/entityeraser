@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static net.minecraft.world.entity.Entity.DATA_SHARED_FLAGS_ID;
+
 public class EntityEraserItem extends Item {
 	public EntityEraserItem() {
 		super(new Item.Properties().stacksTo(1).fireResistant());//.rarity(Rarity.COMMON)
@@ -107,11 +109,10 @@ public class EntityEraserItem extends Item {
 					EntityUtil.sendPacketToP(serverPlayer,new EraserAttackPacket());
 				}
 				EntityUtil.killEntity(target);
-
 			}
 		}
 		if (entity instanceof ServerPlayer player) {
-			if (player.isShiftKeyDown() && !player.level.isClientSide) {
+			if (((Byte)player.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0 && !player.level.isClientSide) {
 				EntityUtil.disableSpawn = !EntityUtil.disableSpawn;
 				EntityUtil.sendPacketToP(player, new DisableSpawnPacket(EntityUtil.disableSpawn));
 				player.sendSystemMessage(Component.translatable("DisableSpawnMode.change", EntityUtil.disableSpawn), true);
@@ -133,7 +134,7 @@ public class EntityEraserItem extends Item {
 	public boolean onEntitySwing(ItemStack itemstack, LivingEntity entity) {
 		boolean retval = super.onEntitySwing(itemstack, entity);
 		if (entity instanceof ServerPlayer player) {
-			if (player.isShiftKeyDown() && !player.level.isClientSide) {
+			if (((Byte)player.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0 && !player.level.isClientSide) {
 				synchronized (EntityUtil.killEvents) {
 					EntityUtil.killEvents.set(!EntityUtil.killEvents.get());
 					EntityUtil.sendPacketToP(player, new KillEventsPacket(EntityUtil.killEvents.get()));

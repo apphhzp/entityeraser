@@ -22,7 +22,7 @@ public class EntityEraserClassLoader extends TransformingClassLoader {
         if (context==null||context.equals(ITransformerActivity.CLASSLOADING_REASON)){
             boolean[] flag={false};
             ClassNode node= CoremodHelper.bytes2ClassNote(bytes,name);
-            EntityEraserTransformer.tran(node,flag);
+            EntityEraserTransformer.tran(EntityEraserTransformer.Phase.BEFORE_COREMOD,node,flag);
             if (flag[0]){
                 bytes=CoremodHelper.classNote2bytes(node,false);
             }
@@ -31,7 +31,7 @@ public class EntityEraserClassLoader extends TransformingClassLoader {
         if (context==null||context.equals(ITransformerActivity.CLASSLOADING_REASON)){
             boolean[] flag={false};
             ClassNode node=CoremodHelper.bytes2ClassNote(bytes,name);
-            EntityEraserTransformer.tran(node,flag,true);
+            EntityEraserTransformer.tran(EntityEraserTransformer.Phase.COREMOD,node,flag,true);
             if (flag[0]){
                 bytes=CoremodHelper.classNote2bytes(node,false);
             }

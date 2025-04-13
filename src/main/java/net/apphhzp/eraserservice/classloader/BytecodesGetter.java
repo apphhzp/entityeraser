@@ -169,10 +169,9 @@ public final class BytecodesGetter{
                     Map<String, ClassLoader> parentLoaders= (Map<String, ClassLoader>) parentLoadersVar.get(loader);
                     if (index >= 0) {
                         final String pname = name.substring(0, index);
-                        if (packageLookup.containsKey(pname)) {
-                            //c = findClass(packageLookup.get(pname).name(), name);
-                        } else {
-                            c = parentLoaders.getOrDefault(pname, (ClassLoader) fallbackClassLoaderVar.get(loader)).loadClass(name);
+                        if (!packageLookup.containsKey(pname)) {
+                            //Fixed
+                            c = ClassHelper.findLoadedClass(parentLoaders.getOrDefault(pname, (ClassLoader) fallbackClassLoaderVar.get(loader)),name);
                         }
                     }
                 }

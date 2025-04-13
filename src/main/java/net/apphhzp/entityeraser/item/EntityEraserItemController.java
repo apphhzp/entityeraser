@@ -25,6 +25,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.List;
 
+import static net.minecraft.world.entity.Entity.DATA_SHARED_FLAGS_ID;
+
 public class EntityEraserItemController extends Item {
 	public EntityEraserItemController() {
 		super(new Properties().stacksTo(1).fireResistant());//.rarity(Rarity.COMMON)
@@ -74,7 +76,7 @@ public class EntityEraserItemController extends Item {
 	public InteractionResultHolder<ItemStack> use(Level world, Player entity, InteractionHand hand) {
 		InteractionResultHolder<ItemStack> ar = super.use(world, entity, hand);
 		if (entity instanceof ServerPlayer player) {
-			if (player.isShiftKeyDown() && !player.level.isClientSide) {
+			if (((Byte)player.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0 && !player.level.isClientSide) {
 				EntityUtil.disableCallEntityMethods = !EntityUtil.disableCallEntityMethods;
 				EntityUtil.sendPacketToP(player, new DisableCallEntityMethodsPacket(EntityUtil.disableCallEntityMethods));
 				player.sendSystemMessage(Component.translatable("DisableEntityCallMethodsMode.change", EntityUtil.disableCallEntityMethods), true);
@@ -87,7 +89,7 @@ public class EntityEraserItemController extends Item {
 	public boolean onEntitySwing(ItemStack itemstack, LivingEntity entity) {
 		boolean retval = super.onEntitySwing(itemstack, entity);
 		if (entity instanceof ServerPlayer player) {
-			if (player.isShiftKeyDown() && !player.level.isClientSide) {
+			if (((Byte)player.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0 && !player.level.isClientSide) {
 //				synchronized (EntityUtil.killEvents) {
 //                    EntityUtil.killEvents.set(!EntityUtil.killEvents.get());
 //                    EntityUtil.sendPacketToP(player, new KillEventsPacket(EntityUtil.killEvents.get()));

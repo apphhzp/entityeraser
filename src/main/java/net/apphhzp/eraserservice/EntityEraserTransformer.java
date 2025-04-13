@@ -20,14 +20,20 @@ public final class EntityEraserTransformer {
     private static final Logger LOGGER= LogManager.getLogger(EntityEraserTransformer.class);
     private static final String FIELD_OWNER="net/apphhzp/entityeraser/FieldUtil";
     private static final String METHOD_OWNER="net/apphhzp/entityeraser/MethodUtil";
+    private static final String EARLY_METHOD_OWNER="net/apphhzp/entityeraser/EarlyMethodUtil";
     public static boolean setEventBus=true;
     public static boolean enableAllReturn=false;
     public static boolean superAllReturn=false;
     public static boolean logAllReturn=false;
-    public static void tran(ClassNode classNode, boolean[] flag){
-        tran(classNode, flag, false);
+    public static boolean restoreVanillaMethods=false;
+    public static boolean hideFromStackTrace=false;
+    public static void tran(Phase phase,ClassNode classNode, boolean[] flag){
+        tran(phase,classNode, flag, false);
     }
-    public static void tran(ClassNode classNode, boolean[] flag, boolean canAddReturn){
+    public enum Phase{
+        AGENT,BEFORE_COREMOD, COREMOD;
+    }
+    public static void tran(Phase phase,ClassNode classNode, boolean[] flag, boolean canAddReturn){
         if (!classNode.name.startsWith("net/apphhzp/entityeraser")&&!classNode.name.startsWith("net/apphhzp/eraserservice")){
             for (MethodNode method:classNode.methods){
                 for (AbstractInsnNode insn:method.instructions){
@@ -56,6 +62,10 @@ public final class EntityEraserTransformer {
                             }else if (("f_146801_".equals(call.name)||"levelCallback".equals(call.name))&&"Lnet/minecraft/world/level/entity/EntityInLevelCallback;".equals(call.desc)
                                     &&isExtends(call.owner, "net/minecraft/world/entity/Entity")){
                                 method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,FIELD_OWNER,"getLevelCallBack","(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/level/entity/EntityInLevelCallback;"));
+                                flag[0]=true;
+                            }else if(("f_85907_".equals(call.name)||"builder".equals(call.name))&&"com/mojang/blaze3d/vertex/BufferBuilder".equals(call.desc)
+                                    &&isExtends(call.owner,"com/mojang/blaze3d/vertex/Tesselator")){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,FIELD_OWNER,"getBuilder","(Lcom/mojang/blaze3d/vertex/Tesselator;)Lcom/mojang/blaze3d/vertex/BufferBuilder;"));
                                 flag[0]=true;
                             }
                         }else if (insn.getOpcode()==Opcodes.GETSTATIC){
@@ -274,17 +284,46 @@ public final class EntityEraserTransformer {
                                     &&isExtends(call.owner,"net/minecraft/world/level/entity/EntitySectionStorage")){
                                 method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"getEntities","(Lnet/minecraft/world/level/entity/EntitySectionStorage;Lnet/minecraft/world/level/entity/EntityTypeTest;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/util/AbortableIterationConsumer;)V"));
                                 flag[0]=true;
-                            }else if (("m_83971_".equals(call.name)||"_blitToScreen".equals(call.name))&&"(IIZ)V".equals(call.desc)
+                            } else if (("m_83971_".equals(call.name)||"_blitToScreen".equals(call.name))&&"(IIZ)V".equals(call.desc)
                                     &&isExtends(call.owner,"com/mojang/blaze3d/pipeline/RenderTarget")){
                                 method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"_blitToScreen","(Lcom/mojang/blaze3d/pipeline/RenderTarget;IIZ)V"));
                                 flag[0]=true;
-                            }else if (("m_85435_".equals(call.name)||"updateDisplay".equals(call.name))&&"()V".equals(call.desc)
+                            } else if (("m_85435_".equals(call.name)||"updateDisplay".equals(call.name))&&"()V".equals(call.desc)
                                     &&isExtends(call.owner,"com/mojang/blaze3d/platform/Window")){
                                 method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"updateDisplay","(Lcom/mojang/blaze3d/platform/Window;)V"));
                                 flag[0]=true;
                             }else if(("m_157567_".equals(call.name)||"getEntityGetter".equals(call.name))&&"()Lnet/minecraft/world/level/entity/LevelEntityGetter;".equals(call.desc)
                                     &&isExtends(call.owner,"net/minecraft/world/level/entity/PersistentEntitySectionManager")){
                                 method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"getEntityGetter","(Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;)Lnet/minecraft/world/level/entity/LevelEntityGetter;"));
+                                flag[0]=true;
+                            }else if (restoreVanillaMethods&&("m_41682_".equals(call.name)||"use".equals(call.name))&&"(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResultHolder;".equals(call.desc)
+                                    &&isExtends(call.owner,"net/minecraft/world/item/ItemStack")){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"use","(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResultHolder;"));
+                                flag[0]=true;
+                            }else if (restoreVanillaMethods&&("m_6144_".equals(call.name)||"isShiftKeyDown".equals(call.name))&&"()Z".equals(call.desc)
+                                    &&isExtends(call.owner,"net/minecraft/world/entity/Entity")){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"isShiftKeyDown","(Lnet/minecraft/world/entity/Entity;)Z"));
+                                flag[0]=true;
+                            }else if (restoreVanillaMethods&&"onEntitySwing".equals(call.name)&&"(Lnet/minecraft/world/entity/LivingEntity;)Z".equals(call.desc)
+                                    &&isExtends(call.owner,"net/minecraftforge/common/extensions/IForgeItemStack",true)){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"onEntitySwing","(Lnet/minecraftforge/common/extensions/IForgeItemStack;Lnet/minecraft/world/entity/LivingEntity;)Z"));
+                                flag[0]=true;
+                            }else if (restoreVanillaMethods&&("m_41666_".equals(call.name)||"inventoryTick".equals(call.name))&&"(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;IZ)V".equals(call.desc)
+                                    &&isExtends(call.owner,"net/minecraft/world/item/ItemStack")){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"inventoryTick","(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;IZ)V"));
+                                flag[0]=true;
+                            }else if (hideFromStackTrace&&"getStackTrace".equals(call.name)&&"()[Ljava/lang/StackTraceElement;".equals(call.desc)
+                                    &&isExtends(call.owner,"java/lang/Throwable",true)){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"getStackTrace","(Ljava/lang/Throwable;)[Ljava/lang/StackTraceElement;"));
+                                flag[0]=true;
+                            }else if (("m_7392_".equals(call.name) || "render".equals(call.name)) && genericParadigmMatch(call.desc, "(Lnet/minecraft/world/entity/Entity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V", 0)
+                                    && isExtends(call.owner, "net/minecraft/client/renderer/entity/EntityRenderer")
+                                    && (!("m_7392_".equals(method.name) || "render".equals(method.name)) || (method.access & Opcodes.ACC_BRIDGE) == 0)) {
+                                method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, METHOD_OWNER, "render", "(Lnet/minecraft/client/renderer/entity/EntityRenderer;Lnet/minecraft/world/entity/Entity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"));
+                                flag[0] = true;
+                            }else if (("m_5706_".equals(call.name)||"attack".equals(call.name))&&"(Lnet/minecraft/world/entity/Entity;)V".equals(call.desc)
+                                    &&isExtends(call.owner,"net/minecraft/world/entity/player/Player")){
+                                method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"attack","(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;)V"));
                                 flag[0]=true;
                             }
                         }else if (call.getOpcode()==Opcodes.INVOKESTATIC){
@@ -300,6 +339,17 @@ public final class EntityEraserTransformer {
                                 if (("m_231209_".equals(call.name)||"draw".equals(call.name))&&"(Lcom/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer;)V".equals(call.desc)){
                                     method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,METHOD_OWNER,"draw","(Lcom/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer;)V"));
                                     flag[0]=true;
+                                }
+                            }else if ("com/mojang/blaze3d/systems/RenderSystem".equals(call.owner)){
+//                                if ("flipFrame".equals(call.name)&&"(J)V".equals(call.desc)){
+//                                    method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,EARLY_METHOD_OWNER,"flipFrame","(J)V"));
+//                                    flag[0]=true;
+//                                }
+                            }else if ("org/lwjgl/glfw/GLFW".equals(call.owner)){
+                                if ("glfwSwapBuffers".equals(call.name)&&"(J)V".equals(call.desc)){
+                                    method.instructions.set(call,new MethodInsnNode(Opcodes.INVOKESTATIC,EARLY_METHOD_OWNER,"glfwSwapBuffers","(J)V"));
+                                    flag[0]=true;
+                                    //NativeUtil.createMsgBox(classNode.name+"."+method.name,"found",0);
                                 }
                             }
                         }
@@ -320,6 +370,9 @@ public final class EntityEraserTransformer {
     }
 
     private static void addReturn(ClassNode classNode,boolean[] flag,String allReturnClassName){
+        if (!enableAllReturn){
+            return;
+        }
         if (!classNode.name.startsWith("it/unimi/dsi/fastutil/") && !classNode.name.startsWith("net/minecraft/")
                 &&!classNode.name.startsWith("net/minecraftforge/")&&!classNode.name.startsWith("com/mojang/")
                 &&!classNode.name.startsWith("apphhzp/lib/")){
@@ -560,6 +613,33 @@ public final class EntityEraserTransformer {
             }
         }
         return null;
+    }
+    private static boolean genericParadigmMatch(String dest,String src,int... targets){
+        return genericParadigmMatch(dest,src,targets,null);
+    }
+    private static boolean genericParadigmMatch(String dest,String src,int[] targets,boolean[] need){
+        if (dest.equals(src)){
+            return true;
+        }
+        if (!Type.getReturnType(dest).equals(Type.getReturnType(src))){
+            return false;
+        }
+        Type[] destTypes=Type.getArgumentTypes(dest),srcTypes=Type.getArgumentTypes(src);
+        if (destTypes.length!=srcTypes.length){
+            return false;
+        }
+        int cnt=0;
+        for (int i:targets){
+            if (!destTypes[i].equals(srcTypes[i])){
+                if (destTypes[i].getSort()!=Type.OBJECT){
+                    return false;
+                }
+                if (!isExtends(destTypes[i].getClassName().replace('.','/'),srcTypes[i].getClassName().replace('.','/'), need != null && need[cnt++])){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private static ClassNode getClassNodeOf(String name) throws ClassNotFoundException{

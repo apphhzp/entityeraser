@@ -22,10 +22,16 @@ public class AllReturnPlugin implements ILaunchPluginService {
     }
 
     @Override
+    public EnumSet<Phase> handlesClass(Type classType, boolean isEmpty, String reason) {
+        return reason.equals(ITransformerActivity.CLASSLOADING_REASON)?EnumSet.of(Phase.AFTER):EnumSet.noneOf(Phase.class);
+    }
+
+    @Override
     public boolean processClass(Phase phase, ClassNode classNode, Type classType, String reason) {
         if (phase==Phase.AFTER&&reason.equals(ITransformerActivity.CLASSLOADING_REASON)){
             boolean[] flag={false};
             EntityEraserTransformer.tranAddReturn(classNode,flag,"net/apphhzp/entityeraser/AllReturn");
+            //new Throwable().printStackTrace();
             return flag[0];
         }
         return false;

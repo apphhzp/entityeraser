@@ -8,6 +8,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -226,7 +227,9 @@ public final class EntityUtil {
                     if (living instanceof Player player){
                         setEventBus();
                         death.add(player.getGameProfile());
-                        AllReturn.allReturn=true;
+                        if (EntityeraserMod.enableAllReturnKill) {
+                            AllReturn.allReturn = true;
+                        }
                         if (player.getAbilities().invulnerable) {
                             player.getAbilities().invulnerable = false;
                             player.onUpdateAbilities();
@@ -571,9 +574,11 @@ public final class EntityUtil {
         EntityEraserDeathScreen gui = new EntityEraserDeathScreen(mc.player);
         ForgeHooksClient.guiLayers.clear();
         mc.screen = gui;
-        gui.added();
         if (RenderSystem.isOnRenderThreadOrInit()) {
-            BufferUploader.reset();
+            if (BufferUploader.lastImmediateBuffer != null) {
+                BufferUploader.lastImmediateBuffer = null;
+                GL30C.glBindVertexArray(0);
+            }
         }
         MouseHandler handler=mc.mouseHandler;
         handler.mouseGrabbed=false;
@@ -582,32 +587,18 @@ public final class EntityUtil {
         KeyMapping.releaseAll();
         EntityEraserRenderers.staticInit(gui,mc,mc.window.getGuiScaledWidth(),mc.window.getGuiScaledHeight());
         mc.noRender = false;
-        mc.updateTitle();
         return gui;
     }
 
     @OnlyIn(Dist.CLIENT)
     public static void forceRenderDeathScreen(EntityEraserDeathScreen gui, Minecraft mc){
-        mc.mainRenderTarget.bindWrite(true);
+        Tesselator.getInstance().builder= DeadBufferBuilder.getInstance();
         GuiGraphics guigraphics = new GuiGraphics(mc, mc.gameRenderer.renderBuffers.bufferSource());
         int i = (int)(mc.mouseHandler.xpos() * (double)mc.getWindow().getGuiScaledWidth() / (double)mc.getWindow().getScreenWidth());
         int j = (int)(mc.mouseHandler.ypos() * (double)mc.getWindow().getGuiScaledHeight() / (double)mc.getWindow().getScreenHeight());
         PoseStack.Pose posestack$pose = guigraphics.pose.poseStack.getLast();
         guigraphics.pose.poseStack.addLast(new PoseStack.Pose(new Matrix4f(posestack$pose.pose), new Matrix3f(posestack$pose.normal)));
-        //        ForgeHooksClient.guiLayers.forEach((layer) -> {
-//            layer.render(guigraphics, Integer.MAX_VALUE, Integer.MAX_VALUE, mc.getDeltaFrameTime());
-//            if (layer.deferredTooltipRendering != null) {
-//                DeathRenderer.renderTooltip(guigraphics,layer.font, layer.deferredTooltipRendering.tooltip(), layer.deferredTooltipRendering.positioner(), Integer.MAX_VALUE, Integer.MAX_VALUE);
-//                layer.deferredTooltipRendering = null;
-//            }
-//            PoseStackHelper.translate(guigraphics.pose,0.0F, 0.0F, 2000.0F);
-//        });
-            //Method method=EntityEraserRenderers.deathRenderer.lookupClass().getMethod("staticRender",EntityEraserDeathScreen.class,GuiGraphics.class,int.class,int.class,float.class);
         EntityEraserRenderers.staticRender(gui,guigraphics,i,j,mc.getDeltaFrameTime());
-//        if (gui.deferredTooltipRendering != null) {
-//            DeathRenderer.renderTooltip(guigraphics,gui.font, gui.deferredTooltipRendering.tooltip(), gui.deferredTooltipRendering.positioner(), i, j);
-//            gui.deferredTooltipRendering = null;
-//        }
         guigraphics.pose.poseStack.removeLast();
     }
 

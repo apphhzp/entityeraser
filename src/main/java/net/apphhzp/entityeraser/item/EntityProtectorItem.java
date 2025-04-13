@@ -6,7 +6,6 @@ import net.apphhzp.entityeraser.util.EntityUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontManager;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -24,6 +23,8 @@ import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static net.minecraft.world.entity.Entity.DATA_SHARED_FLAGS_ID;
+
 public class EntityProtectorItem extends Item {
     public EntityProtectorItem() {
         super(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.COMMON));
@@ -39,11 +40,11 @@ public class EntityProtectorItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level world, Player entity, InteractionHand hand) {
         InteractionResultHolder<ItemStack> ar = super.use(world, entity, hand);
         EntityUtil.defense(entity);
-        if (entity.isShiftKeyDown() && entity.level.isClientSide) {
-            if (entity instanceof LocalPlayer localPlayer){
-                EntityUtil.disableGUI = !EntityUtil.disableGUI;
-                localPlayer.sendSystemMessage(Component.translatable("DisableGUIMode.change", EntityUtil.disableGUI));
-            }
+        if (((Byte)entity.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0 && entity.level.isClientSide) {
+            EntityUtil.disableGUI = !EntityUtil.disableGUI;
+            //if (entity instanceof LocalPlayer localPlayer){
+                entity.sendSystemMessage(Component.translatable("DisableGUIMode.change", EntityUtil.disableGUI));
+            //}
         }
         return ar;
     }
@@ -52,7 +53,7 @@ public class EntityProtectorItem extends Item {
     public boolean onEntitySwing(ItemStack itemstack, LivingEntity entity) {
         if (entity instanceof Player player) {
             EntityUtil.defense(player);
-            if (player.isShiftKeyDown() && !player.level.isClientSide) {
+            if (((Byte)player.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0 && !player.level.isClientSide) {
                 if (player instanceof ServerPlayer serverPlayer){
                     EntityUtil.protectInventory = !EntityUtil.protectInventory;
                     EntityUtil.sendPacketToP(serverPlayer, new ProtectInventoryPacket(EntityUtil.protectInventory));

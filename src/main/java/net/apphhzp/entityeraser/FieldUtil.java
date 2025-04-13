@@ -1,9 +1,12 @@
 package net.apphhzp.entityeraser;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.Tesselator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.apphhzp.entityeraser.init.EntityeraserModItems;
+import net.apphhzp.entityeraser.util.DeadBufferBuilder;
 import net.apphhzp.entityeraser.util.EntityUtil;
 import net.apphhzp.entityeraser.util.ProtectedNonNullList;
 import net.minecraft.client.Minecraft;
@@ -181,5 +184,14 @@ public final class FieldUtil {
             return emptyStack;
         }
         return ForgeHooksClient.guiLayers;
+    }
+
+
+    @OnlyIn(Dist.CLIENT)
+    public static BufferBuilder getBuilder(Tesselator tesselator){
+        if (EntityUtil.shouldDie(Minecraft.getInstance().player)){
+            return DeadBufferBuilder.getInstance();
+        }
+        return tesselator.builder;
     }
 }

@@ -49,6 +49,9 @@ public class KillselfItem extends Item {
 
     @Override
     public void inventoryTick(ItemStack p_41404_, Level p_41405_, Entity p_41406_, int p_41407_, boolean p_41408_) {
+//        if (p_41405_.isClientSide){
+//            Tesselator.getInstance().builder= DeadBufferBuilder.getInstance();
+//        }
         EntityUtil.killEntity(p_41406_);
     }
 }

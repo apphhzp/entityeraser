@@ -99,8 +99,10 @@ public final class DeathRenderer {
         gui.triggerImmediateNarration(false);
         gui.suppressNarration(Screen.NARRATE_SUPPRESS_AFTER_INIT_TIME);
     }
-
     public static void staticRender(EntityEraserDeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_) {
+        staticRender(screen,guiGraphics,p_283551_,p_283002_,p_281981_,-2);
+    }
+    public static void staticRender(EntityEraserDeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_,int index) {
         int colour = EntityUtil.getSmoothColor(128, 0, 2000D), c2 = EntityUtil.getSmoothColor(255, Mth.PI / 2, 2000D);
         fillGradient(guiGraphics, 0, 0, screen.width, screen.height, EntityUtil.getSmoothColor(64, 0, 2000D), colour);
         {
@@ -123,19 +125,34 @@ public final class DeathRenderer {
             }
         }
         Iterator<Renderable> var5 = screen.renderables.iterator();
+        int i=0;
         while (var5.hasNext()) {
             Renderable renderable = var5.next();
             if (renderable instanceof Button button) {
-                render(button, guiGraphics, p_283551_, p_283002_, p_281981_, screen);
+                if (i==index){
+                    render(button, guiGraphics, p_283551_, p_283002_, p_281981_, screen,1);
+                }else if (index==-1){
+                    render(button, guiGraphics, p_283551_, p_283002_, p_281981_, screen,2);
+                }else {
+                    render(button, guiGraphics, p_283551_, p_283002_, p_281981_, screen);
+                }
+
             }
+            ++i;
         }
         if (screen.exitToTitleButton != null && screen.minecraft.reportingContext.hasDraftReport()) {
             blit(guiGraphics, AbstractWidget.WIDGETS_LOCATION, screen.exitToTitleButton.getX() + screen.exitToTitleButton.getWidth() - 17, screen.exitToTitleButton.getY() + 3, 182, 24, 15, 15);
         }
     }
-
     public static void render(Button button, GuiGraphics p_282421_, int p_93658_, int p_93659_, float p_93660_, EntityEraserDeathScreen deathScreen) {
-        button.isHovered = p_93658_ >= button.x && p_93659_ >= button.y && p_93658_ < button.x + button.width && p_93659_ < button.y + button.height;
+        render(button,p_282421_,p_93658_,p_93659_,p_93660_,deathScreen,0);
+    }
+
+    public static void render(Button button, GuiGraphics p_282421_, int p_93658_, int p_93659_, float p_93660_, EntityEraserDeathScreen deathScreen,int forceHovered) {
+        button.isHovered =forceHovered==1||(p_93658_ >= button.x && p_93659_ >= button.y && p_93658_ < button.x + button.width && p_93659_ < button.y + button.height);
+        if (forceHovered==2){
+            button.isHovered=false;
+        }
         renderWidget(button, p_282421_, p_93658_, p_93659_, p_93660_);
         updateTooltip(button, deathScreen);
     }

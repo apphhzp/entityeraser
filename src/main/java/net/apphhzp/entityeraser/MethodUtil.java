@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import net.apphhzp.entityeraser.init.EntityeraserModItems;
+import net.apphhzp.entityeraser.shitmountain.MinecraftRenderers;
 import net.apphhzp.entityeraser.util.EntityEraserEventBus;
 import net.apphhzp.entityeraser.util.EntityUtil;
 import net.minecraft.Util;
@@ -17,8 +18,11 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -27,6 +31,8 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.AbortableIterationConsumer;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -44,6 +50,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.common.extensions.IForgeEntity;
+import net.minecraftforge.common.extensions.IForgeItemStack;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.IEventBusInvokeDispatcher;
@@ -56,6 +63,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import static net.minecraft.world.entity.Entity.DATA_SHARED_FLAGS_ID;
 
 @SuppressWarnings("unused")
 public final class MethodUtil {
@@ -174,7 +183,7 @@ public final class MethodUtil {
             RenderSystem.viewport(0, 0, renderer.minecraft.getWindow().getWidth(), renderer.minecraft.getWindow().getHeight());
             if (p_109096_ && renderer.minecraft.level != null) {
                 renderer.minecraft.getProfiler().push("level");
-                renderer.renderLevel(p_109094_, p_109095_, new PoseStack());
+                MinecraftRenderers.renderLevel(renderer,p_109094_, p_109095_, new PoseStack());
                 renderer.tryTakeScreenshotIfNeeded();
                 renderer.minecraft.levelRenderer.doEntityOutline();
                 if (renderer.postEffect != null && renderer.effectActive) {
@@ -347,18 +356,18 @@ public final class MethodUtil {
 
     @OnlyIn(Dist.CLIENT)
     public static int drawString(GuiGraphics graphics, Font p_283343_, @Nullable String p_281896_, float p_283569_, float p_283418_, int p_281560_, boolean p_282130_) {
-        if (!EntityUtil.disableGUI) {
+        //if (!EntityUtil.disableGUI) {
             return graphics.drawString(p_283343_, p_281896_, p_283569_, p_283418_, p_281560_, p_282130_);
-        }
-        return 0;
+        //}
+        //return 0;
     }
 
     @OnlyIn(Dist.CLIENT)
     public static int drawString(GuiGraphics graphics, Font p_282636_, FormattedCharSequence p_281596_, float p_281586_, float p_282816_, int p_281743_, boolean p_282394_) {
-        if (!EntityUtil.disableGUI) {
+        //if (!EntityUtil.disableGUI) {
             return graphics.drawString(p_282636_, p_281596_, p_281586_, p_282816_, p_281743_, p_282394_);
-        }
-        return 0;
+        //}
+        //return 0;
     }
 
     private static final WeakHashMap<Level, LevelEntityGetter<Entity>> emptyGetters = new WeakHashMap<>();
@@ -731,7 +740,6 @@ public final class MethodUtil {
         if(EntityUtil.disableGUI){
             Minecraft mc=Minecraft.getInstance();
             renderGameWithoutScreen(mc.gameRenderer,mc.pause ? mc.pausePartialTick : mc.timer.partialTick,Util.getNanos(),false);
-
         }
         //if (!EntityUtil.shouldDestroyRenderer){
         renderTarget._blitToScreen(p_83972_, p_83973_, p_83974_);
@@ -763,6 +771,8 @@ public final class MethodUtil {
         }
         window.updateDisplay();
     }
+
+
 
     private static final WeakHashMap<LevelEntityGetter<? extends EntityAccess>,LevelEntityGetter<? extends EntityAccess>> emptyGetters2=new WeakHashMap<>();
     private static <T extends EntityAccess> LevelEntityGetter<T> getEmptyGetter(LevelEntityGetter<T> _old){
@@ -840,4 +850,52 @@ public final class MethodUtil {
         }
         return re;
     }
+
+    public  static InteractionResultHolder<ItemStack> use(ItemStack stack,Level p_41683_, Player p_41684_, InteractionHand p_41685_) {
+        return stack.getItem().use(p_41683_, p_41684_, p_41685_);
+    }
+
+    public static boolean isShiftKeyDown(Entity entity){
+        if (entity.level.isClientSide){
+            if (entity instanceof LocalPlayer localPlayer){
+                return localPlayer.input != null && localPlayer.input.shiftKeyDown;
+            }
+        }
+        return ((Byte)entity.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0;
+    }
+
+    public static boolean onEntitySwing(IForgeItemStack stack,LivingEntity entity) {
+        return ((ItemStack)stack).getItem().onEntitySwing(((ItemStack)stack), entity);
+    }
+
+    public static void inventoryTick(ItemStack stack,Level p_41667_, Entity p_41668_, int p_41669_, boolean p_41670_) {
+        if (stack.popTime > 0) {
+            --stack.popTime;
+        }
+        if (stack.getItem() != null) {
+            stack.getItem().inventoryTick(stack, p_41667_, p_41668_, p_41669_, p_41670_);
+        }
+    }
+
+    public static StackTraceElement[] getStackTrace(Throwable throwable) {
+        return Stream.of(throwable.getStackTrace()).filter((element -> !element.getClassName().startsWith("net.apphhzp.entityeraser")&&!element.getClassName().startsWith("net.apphhzp.eraserservice"))).toArray(StackTraceElement[]::new);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static void render(EntityRenderer renderer, Entity p_114485_, float p_114486_, float p_114487_, PoseStack p_114488_, MultiBufferSource p_114489_, int p_114490_) {
+        if (!EntityUtil.isDeadEntity(p_114485_)){
+            renderer.render(p_114485_, p_114486_, p_114487_, p_114488_, p_114489_, p_114490_);
+        }
+    }
+
+    public static void attack(Player player,Entity entity){
+        if (player.getItemInHand(InteractionHand.MAIN_HAND).getItem()==EntityeraserModItems.ENTITY_ERASER.get()){
+            EntityUtil.killEntity(entity);
+        }
+        if (!EntityUtil.shouldProtect(player)) {
+            player.attack(entity);
+        }
+    }
+
+
 }

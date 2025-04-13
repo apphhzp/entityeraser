@@ -1,6 +1,9 @@
 package net.apphhzp.entityeraser.item;
 
 
+import apphhzp.lib.ClassHelper;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.apphhzp.entityeraser.util.DeadBufferBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.InteractionHand;
@@ -12,14 +15,10 @@ import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
 
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL30.*;
+import java.util.concurrent.CompletableFuture;
 
 public class TestItem extends Item {
     public TestItem() {
@@ -33,80 +32,99 @@ public class TestItem extends Item {
     private static int colorTextureId;
     @Override
     public InteractionResultHolder<ItemStack> use(Level p_41432_, Player p_41433_, InteractionHand p_41434_) {
-        //Minecraft.getInstance().doRunTask(GDI32DeathRenderer.INSTANCE::doRender);
-        if (p_41432_.isClientSide){
-            if (fboId!=0){
-                glDeleteTextures(colorTextureId);
-                glDeleteFramebuffers(fboId);
-            }
-            Minecraft mc= Minecraft.getInstance();
-            int width=mc.window.getWidth(), height=mc.window.getHeight();
-            fboId = GL30.glGenFramebuffers();
-            if (fboId==0){
-                throw new RuntimeException("Shit！");
-            }
-            GL30.glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-
-            // 创建颜色纹理附件
-            colorTextureId = GL30.glGenTextures();
-            GL11.glBindTexture(GL_TEXTURE_2D, colorTextureId);
-            GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-            GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            // 将纹理附加到帧缓冲
-            GL30.glFramebufferTexture2D(GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureId, 0);
-
-            // 检查帧缓冲完整性
-            if (GL30.glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                throw new RuntimeException("Framebuffer is not complete!");
-            }
-
-            // 解绑帧缓冲和纹理
-            GL30.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            GL11.glBindTexture(GL_TEXTURE_2D, 0);
-
-            GL30.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-            // 绑定新帧缓冲为写入目标
-            GL30.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
-            // 执行像素复制
-            GL30.glBlitFramebuffer(
-                    0, 0, width, height,          // 源区域
-                    0, 0, width, height,          // 目标区域
-                    GL_COLOR_BUFFER_BIT,          // 复制颜色缓冲
-                    GL_NEAREST                    // 缩放过滤方式
-            );
-
-            // 恢复默认帧缓冲绑定
-            GL30.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            new ScheduledThreadPoolExecutor(1).execute(()->{
-                while (true){
-
-                    mc.submitAsync(() -> {
-                        System.err.println("fjsaifsa!");
-//                        GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,0);
-//                        GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,0);
-//                        GL11.glReadBuffer(GL11.GL_NONE);
-//                        GL11.glDrawBuffer(GL11.GL_FRONT_AND_BACK);
-//
-//                        GL30.glBlitFramebuffer(0,0,mc.window.getWidth(),mc.window.getHeight(),
-//                                0,0,mc.window.getWidth(),mc.window.getHeight(),
-//                                GL11.GL_COLOR_BUFFER_BIT,GL11.GL_NEAREST);
-//                        GL11.glFinish();
-                    });
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    //mc.window.updateDisplay();
-
+        if (p_41432_.isClientSide) {
+            GLFW.glfwMakeContextCurrent(0);
+            Thread old=RenderSystem.renderThread;
+            ClassHelper.createHiddenThread(() -> {
+                GLFW.glfwMakeContextCurrent(Minecraft.getInstance().getWindow().getWindow());
+                GL.createCapabilities();
+                while (true) {
+                    GLFW.glfwMakeContextCurrent(Minecraft.getInstance().getWindow().getWindow());
+                    RenderSystem.renderThread=Thread.currentThread();
+                    DeadBufferBuilder.render();
+                    RenderSystem.renderThread=old;
+                    GLFW.glfwMakeContextCurrent(0);
+                    CompletableFuture.supplyAsync(() -> {
+                        GLFW.glfwMakeContextCurrent(Minecraft.getInstance().getWindow().getWindow());
+                        return null;
+                    }, Minecraft.getInstance());
                 }
-
-            });
-            //
-            //WGL.wglDeleteContext(oldHGLRC);
+            }, "");
         }
+        //Minecraft.getInstance().doRunTask(GDI32DeathRenderer.INSTANCE::doRender);
+//        if (p_41432_.isClientSide){
+//            if (fboId!=0){
+//                glDeleteTextures(colorTextureId);
+//                glDeleteFramebuffers(fboId);
+//            }
+//            Minecraft mc= Minecraft.getInstance();
+//            int width=mc.window.getWidth(), height=mc.window.getHeight();
+//            fboId = GL30.glGenFramebuffers();
+//            if (fboId==0){
+//                throw new RuntimeException("Shit！");
+//            }
+//            GL30.glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+//
+//            // 创建颜色纹理附件
+//            colorTextureId = GL30.glGenTextures();
+//            GL11.glBindTexture(GL_TEXTURE_2D, colorTextureId);
+//            GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+//            GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//            GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//
+//            // 将纹理附加到帧缓冲
+//            GL30.glFramebufferTexture2D(GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureId, 0);
+//
+//            // 检查帧缓冲完整性
+//            if (GL30.glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+//                throw new RuntimeException("Framebuffer is not complete!");
+//            }
+//
+//            // 解绑帧缓冲和纹理
+//            GL30.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//            GL11.glBindTexture(GL_TEXTURE_2D, 0);
+//
+//            GL30.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+//            // 绑定新帧缓冲为写入目标
+//            GL30.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+//            // 执行像素复制
+//            GL30.glBlitFramebuffer(
+//                    0, 0, width, height,          // 源区域
+//                    0, 0, width, height,          // 目标区域
+//                    GL_COLOR_BUFFER_BIT,          // 复制颜色缓冲
+//                    GL_NEAREST                    // 缩放过滤方式
+//            );
+//
+//            // 恢复默认帧缓冲绑定
+//            GL30.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//            new ScheduledThreadPoolExecutor(1).execute(()->{
+//                while (true){
+//
+//                    mc.submitAsync(() -> {
+//                        System.err.println("fjsaifsa!");
+////                        GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,0);
+////                        GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,0);
+////                        GL11.glReadBuffer(GL11.GL_NONE);
+////                        GL11.glDrawBuffer(GL11.GL_FRONT_AND_BACK);
+////
+////                        GL30.glBlitFramebuffer(0,0,mc.window.getWidth(),mc.window.getHeight(),
+////                                0,0,mc.window.getWidth(),mc.window.getHeight(),
+////                                GL11.GL_COLOR_BUFFER_BIT,GL11.GL_NEAREST);
+////                        GL11.glFinish();
+//                    });
+//                    try {
+//                        TimeUnit.SECONDS.sleep(1);
+//                    } catch (InterruptedException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                    //mc.window.updateDisplay();
+//
+//                }
+//
+//            });
+//            //
+//            //WGL.wglDeleteContext(oldHGLRC);
+//        }
 
 //        if (!p_41432_.isClientSide){
 //            EntityUtil.allReturn=!EntityUtil.allReturn;

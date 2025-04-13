@@ -17,6 +17,7 @@ public final class EntityEraserRenderers {
     public static final MethodHandles.Lookup deathRenderer;
     private static final MethodHandle staticInit;
     private static final MethodHandle staticRender;
+    private static final MethodHandle staticRender2;
     static {
         try {
             if (ClassHelper.isHotspotJVM){
@@ -24,14 +25,16 @@ public final class EntityEraserRenderers {
                     deathRenderer= ClassHelper.defineHiddenClass("net.apphhzp.entityeraser.shitmountain.DeathRenderer", EntityEraserRenderers.class,true,null, ClassOption.NESTMATE,ClassOption.STRONG);
                     staticInit=deathRenderer.findStatic(deathRenderer.lookupClass(),"staticInit", MethodType.methodType(void.class, EntityEraserDeathScreen.class, Minecraft.class,int.class,int.class));
                     staticRender=deathRenderer.findStatic(deathRenderer.lookupClass(),"staticRender",MethodType.methodType(void.class,EntityEraserDeathScreen.class,GuiGraphics.class,int.class,int.class,float.class));
+                    staticRender2=deathRenderer.findStatic(deathRenderer.lookupClass(),"staticRender",MethodType.methodType(void.class,EntityEraserDeathScreen.class,GuiGraphics.class,int.class,int.class,float.class,int.class));
                 }else {
-                    staticInit=staticRender=null;
+                    staticInit=staticRender=staticRender2=null;
                     deathRenderer=null;
                 }
             }else {
                 deathRenderer= ClassHelper.defineHiddenClass("net.apphhzp.entityeraser.shitmountain.DeathRenderer", EntityEraserRenderers.class,true,null, ClassOption.NESTMATE,ClassOption.STRONG);
                 staticInit=deathRenderer.findStatic(deathRenderer.lookupClass(),"staticInit", MethodType.methodType(void.class, EntityEraserDeathScreen.class, Minecraft.class,int.class,int.class));
                 staticRender=deathRenderer.findStatic(deathRenderer.lookupClass(),"staticRender",MethodType.methodType(void.class,EntityEraserDeathScreen.class,GuiGraphics.class,int.class,int.class,float.class));
+                staticRender2=deathRenderer.findStatic(deathRenderer.lookupClass(),"staticRender",MethodType.methodType(void.class,EntityEraserDeathScreen.class,GuiGraphics.class,int.class,int.class,float.class,int.class));
             }
         } catch (Throwable e) {
             throw new RuntimeException(e);
@@ -48,7 +51,17 @@ public final class EntityEraserRenderers {
         }else {
             DeathRenderer.staticRender(screen, guiGraphics, p_283551_, p_283002_, p_281981_);
         }
-
+    }
+    public static void staticRender2(EntityEraserDeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_,int index){
+        if (deathRenderer!=null){
+            try {
+                staticRender2.invoke(screen, guiGraphics, p_283551_, p_283002_, p_281981_,index);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }else {
+            DeathRenderer.staticRender(screen, guiGraphics, p_283551_, p_283002_, p_281981_,index);
+        }
     }
     public static void staticInit(EntityEraserDeathScreen gui, Minecraft p_96607_, int p_96608_, int p_96609_){
         if (deathRenderer!=null) {

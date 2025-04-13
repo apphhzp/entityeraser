@@ -3,7 +3,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = '0.0.4'
+version = '0.0.8'
 group = 'com.yourname.modid'
 archivesBaseName = 'modid'
 
@@ -53,7 +53,6 @@ jar {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
-    //implementation files('libs/apphhzpLIB-1.0.4.jar')
     minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
 
 }

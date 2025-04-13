@@ -1,2 +1,0 @@
-#JavaAgent needs to be enabled
-false

@@ -23,14 +23,19 @@ public class EntityEraserPlugin implements ILaunchPluginService {
 
     @Override
     public EnumSet<Phase> handlesClass(Type classType, boolean isEmpty) {
-        return EnumSet.of(Phase.AFTER);
+        return EnumSet.of(Phase.AFTER,Phase.BEFORE);
+    }
+
+    @Override
+    public EnumSet<Phase> handlesClass(Type classType, boolean isEmpty, String reason) {
+        return reason.equals(ITransformerActivity.CLASSLOADING_REASON)?EnumSet.of(Phase.AFTER,Phase.BEFORE):EnumSet.noneOf(Phase.class);
     }
 
     @Override
     public boolean processClass(Phase phase, ClassNode classNode, Type classType, String reason) {
-        if (phase==Phase.AFTER&&reason.equals(ITransformerActivity.CLASSLOADING_REASON)){
+        if (reason.equals(ITransformerActivity.CLASSLOADING_REASON)){
             boolean[] flag ={false,false};
-            EntityEraserTransformer.tran(classNode,flag);
+            EntityEraserTransformer.tran(EntityEraserTransformer.Phase.COREMOD,classNode,flag);
             return flag[0];
         }
         return false;
