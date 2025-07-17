@@ -26,7 +26,6 @@ public class EntityEraserDeathScreen extends DeathScreen {
         }else {
             this.causeOfDeath=Component.translatable("death.deathOfCause","<null>");
         }
-
     }
 
     @Override
@@ -34,10 +33,8 @@ public class EntityEraserDeathScreen extends DeathScreen {
         this.delayTicker = 0;
         this.exitButtons.clear();
         Component $$0 = Component.translatable("death.do_not_respawn");
-        this.exitButtons.add(this.addRenderableWidget(Button.builder($$0, (p_280794_) -> {}).bounds(this.width / 2 - 100, this.height / 4 + 72, 200, 20).build()));
-        this.exitToTitleButton = this.addRenderableWidget(Button.builder(Component.translatable("death.do_not_exit"), (p_280796_) -> {
-            this.minecraft.getReportingContext().draftReportHandled(this.minecraft, this, ()->{}, true);
-        }).bounds(this.width / 2 - 100, this.height / 4 + 96, 200, 20).build());
+        this.exitButtons.add(this.addRenderableWidget(Button.builder($$0, new OnPress1()).bounds(this.width / 2 - 100, this.height / 4 + 72, 200, 20).build()));
+        this.exitToTitleButton = this.addRenderableWidget(Button.builder(Component.translatable("death.do_not_exit"), new OnPress2(this)).bounds(this.width / 2 - 100, this.height / 4 + 96, 200, 20).build());
         this.exitButtons.add(this.exitToTitleButton);
         this.deathScore = Component.translatable("deathScreen.score").append(": ").append(Component.literal(Integer.toString(this.minecraft.player.getScore())).withStyle(ChatFormatting.YELLOW));
     }
@@ -96,5 +93,26 @@ public class EntityEraserDeathScreen extends DeathScreen {
         int $$2 = this.width / 2 - $$1 / 2;
         int $$3 = this.width / 2 + $$1 / 2;
         return p_95918_ >= $$2 && p_95918_ <= $$3 ? this.minecraft.font.getSplitter().componentStyleAtWidth(this.causeOfDeath, p_95918_ - $$2) : null;
+    }
+
+    public static class OnPress1 implements Button.OnPress {
+        public OnPress1(){
+
+        }
+        @Override
+        public void onPress(Button p_280794_) {
+        }
+    }
+
+    public static class OnPress2 implements Button.OnPress {
+        private final DeathScreen deathScreen;
+        public OnPress2(DeathScreen screen){
+            this.deathScreen=screen;
+        }
+        @Override
+        public void onPress(Button p_280796_) {
+            deathScreen.minecraft.getReportingContext().draftReportHandled(deathScreen.minecraft, deathScreen, () -> {
+            }, true);
+        }
     }
 }

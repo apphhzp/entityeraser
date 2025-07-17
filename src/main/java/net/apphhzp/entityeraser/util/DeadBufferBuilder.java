@@ -1,16 +1,15 @@
 package net.apphhzp.entityeraser.util;
 
+import apphhzp.lib.ClassOption;
 import com.mojang.blaze3d.pipeline.MainTarget;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
-import net.apphhzp.entityeraser.screen.EntityEraserDeathScreen;
 import net.apphhzp.entityeraser.shitmountain.DeathRenderer;
 import net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers;
 import net.apphhzp.entityeraser.shitmountain.PoseStackHelper;
@@ -20,10 +19,12 @@ import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.joml.Matrix4f;
@@ -33,25 +34,31 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL30C;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodType;
+
+import static apphhzp.lib.ClassHelperSpecial.*;
 import static net.apphhzp.entityeraser.shitmountain.MinecraftRenderers.doEntityOutline;
 import static net.apphhzp.entityeraser.shitmountain.MinecraftRenderers.renderLevel;
 
 @OnlyIn(Dist.CLIENT)
-public class DeadBufferBuilder extends BufferBuilder {
-    private static DeadBufferBuilder INSTANCE;
+public class DeadBufferBuilder{
+    private static final MethodHandle deathScreenConstructor;
     private static RenderTarget workingTarget;
-
-    //public static RenderTarget preparingTarget;
-
     private static RenderTarget normalTarget;
-
-    //public static RenderTarget respawnTarget;
-
-    //public static RenderTarget titleTarget;
-    private static EntityEraserDeathScreen deathScreen;
-    private DeadBufferBuilder(int p_85664_) {
-        super(p_85664_);
+    private static DeathScreen deathScreen;
+    static {
+        try {
+            deathScreenConstructor= lookup.findConstructor(
+                    defineHiddenClass("net.apphhzp.entityeraser.screen.EntityEraserDeathScreen",DeadBufferBuilder.class,true,null, ClassOption.STRONG,ClassOption.NESTMATE).lookupClass(),
+                    MethodType.methodType(void.class, Player.class));
+        } catch (Throwable e) {
+            throwOriginalException(e);
+            throw new RuntimeException(e);
+        }
     }
+
+    private DeadBufferBuilder() {}
 
     private static int framebufferWidth;
 
@@ -59,13 +66,6 @@ public class DeadBufferBuilder extends BufferBuilder {
 
     private static RenderTarget currentTarget() {
         return normalTarget;
-    }
-
-    public static DeadBufferBuilder getInstance(){
-        if (INSTANCE ==null){
-            INSTANCE =new DeadBufferBuilder(2097152);
-        }
-        return INSTANCE;
     }
 
     private static void recreate(){
@@ -81,7 +81,12 @@ public class DeadBufferBuilder extends BufferBuilder {
         workingTarget = normalTarget;
         FogRenderer.setupNoFog();
         RenderSystem.enableCull();
-        deathScreen = new EntityEraserDeathScreen(mc.player);
+        try {
+            deathScreen = (DeathScreen) deathScreenConstructor.invoke(mc.player);
+        } catch (Throwable e) {
+            throwOriginalException(e);
+            throw new RuntimeException(e);
+        }
         if (BufferUploader.lastImmediateBuffer != null) {
             BufferUploader.lastImmediateBuffer = null;
             GL30C.glBindVertexArray(0);
@@ -97,14 +102,6 @@ public class DeadBufferBuilder extends BufferBuilder {
         GL30C.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
         GL30C.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, 0);
         GL30C.glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 0, framebufferWidth, framebufferHeight, GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
-    }
-
-    @Override
-    public void clear() {
-        super.clear();
-        if ("flipFrame".equals(new Throwable().getStackTrace()[1].getMethodName())) {
-            render();
-        }
     }
 
     public static void render(){

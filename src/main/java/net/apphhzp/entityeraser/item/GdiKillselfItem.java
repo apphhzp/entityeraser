@@ -1,6 +1,6 @@
 package net.apphhzp.entityeraser.item;
 
-import apphhzp.lib.ClassHelper;
+import apphhzp.lib.ClassHelperSpecial;
 import apphhzp.lib.natives.NativeUtil;
 import com.sun.jna.Native;
 import net.apphhzp.entityeraser.util.GDI32DeathRenderer;
@@ -75,7 +75,7 @@ public class GdiKillselfItem extends Item {
         }
     }
     private static GDI32DeathRenderer create(){
-        if (ClassHelper.isWindows){
+        if (ClassHelperSpecial.isWindows){
             create_resources();
             String s = (new File(".")).getAbsolutePath();
             String s1 = s.substring(0, s.length() - 2);

@@ -1,14 +1,9 @@
 package net.apphhzp.entityeraser.util;
 
-import apphhzp.lib.ClassHelper;
-import net.minecraft.world.entity.LivingEntity;
-
 public class Test {
-    public static void main(String[] args) throws NoSuchFieldException {
-
-        ClassHelper.forceSetField(LivingEntity.class,LivingEntity.class.getDeclaredField("DATA_HEALTH_ID"),0);
+    public static void main(String[] args) throws NoSuchFieldException, NoSuchMethodException, IllegalAccessException {
 //        try {
-//            //instImpl.addTransformer(new EntityEraserClassFileTransformer(), true);
+//            //instImpl.addTransformer(new EntityEraserClassFileTransformerSpecial(), true);
 //            Class<?> implClass=Class.forName("sun.instrument.InstrumentationImpl");
 //            InputStream is=implClass.getResourceAsStream("/sun/instrument/InstrumentationImpl.class");
 //            byte[] dat=new byte[is.available()];
@@ -27,7 +22,7 @@ public class Test {
 //                    method.instructions.add(new VarInsnNode(Opcodes.ALOAD,5));
 //                    method.instructions.add(new VarInsnNode(Opcodes.ALOAD,6));
 //                    method.instructions.add(new VarInsnNode(Opcodes.ILOAD,7));
-//                    method.visitMethodInsn(Opcodes.INVOKESTATIC, "net/apphhzp/eraserservice/agent/EntityEraserClassFileTransformer", "transform", "(Lsun/instrument/InstrumentationImpl;Ljava/lang/Module;Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/Class;Ljava/security/ProtectionDomain;[BZ)[B", false);
+//                    method.visitMethodInsn(Opcodes.INVOKESTATIC, "net/apphhzp/eraserservice/agent/EntityEraserClassFileTransformerSpecial", "transform", "(Lsun/instrument/InstrumentationImpl;Ljava/lang/Module;Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/Class;Ljava/security/ProtectionDomain;[BZ)[B", false);
 //                    method.instructions.add(new InsnNode(Opcodes.ARETURN));
 //                    method.visitMaxs(8,8);
 //                }

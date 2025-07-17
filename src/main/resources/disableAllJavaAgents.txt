@@ -1,0 +1,2 @@
+//Warning:Unstable.This will disable all JavaAgents, including EntityEraser's.
+false

@@ -1,12 +1,12 @@
 package net.apphhzp.entityeraser;
 
-import apphhzp.lib.ClassHelper;
+import apphhzp.lib.ClassHelperSpecial;
 
 public final class AllReturn {
     public static boolean added=false;
     static {
 		if (!added){
-            ClassHelper.addExportImpl(AllReturn.class.getModule(),"net.apphhzp.entityeraser");
+            ClassHelperSpecial.addExportImpl(AllReturn.class.getModule(),"net.apphhzp.entityeraser");
             added=true;
         }
 		allReturn=false;

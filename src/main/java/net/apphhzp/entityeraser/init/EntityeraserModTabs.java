@@ -4,7 +4,7 @@
  */
 package net.apphhzp.entityeraser.init;
 
-import apphhzp.lib.ClassHelper;
+import apphhzp.lib.ClassHelperSpecial;
 import net.apphhzp.entityeraser.EntityeraserMod;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.CreativeModeTab;
@@ -30,9 +30,10 @@ public class EntityeraserModTabs {
 				tabData.accept(EntityeraserModItems.TEST_ITEM.get());
 			}
 			tabData.accept(EntityeraserModItems.ALL_RETURN_ITEM.get());
-			if (ClassHelper.isWindows){
+			if (ClassHelperSpecial.isWindows){
 				tabData.accept(EntityeraserModItems.GDI_KILL_SELF_ITEM.get());
 			}
+			tabData.accept(EntityeraserModItems.TIME_STOP_ITEM.get());
 		}
 	}
 }

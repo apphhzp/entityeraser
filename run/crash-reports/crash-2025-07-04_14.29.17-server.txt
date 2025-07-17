@@ -1,0 +1,334 @@
+---- Minecraft Crash Report ----
+// You're mean.
+
+Time: 2025-07-04 14:29:17
+Description: Watching Server
+
+java.lang.Error: ServerHangWatchdog detected that a single server tick took 60.01 seconds (should be max 0.05)
+	at net.minecraft.server.dedicated.ServerWatchdog.run(ServerWatchdog.java:43) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at java.lang.Thread.run(Thread.java:842) ~[?:?] {}
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Server Watchdog
+Stacktrace:
+	at net.minecraft.server.dedicated.ServerWatchdog.run(ServerWatchdog.java:43) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+-- Thread Dump --
+Details:
+	Threads: "Reference Handler" daemon prio=10 Id=2 RUNNABLE
+	at java.base@17.0.10/java.lang.ref.Reference.waitForReferencePendingList(Native Method)
+	at java.base@17.0.10/java.lang.ref.Reference.processPendingReferences(Reference.java:253)
+	at java.base@17.0.10/java.lang.ref.Reference$ReferenceHandler.run(Reference.java:215)
+
+
+"Finalizer" daemon prio=8 Id=3 WAITING on java.lang.ref.ReferenceQueue$Lock@27cb983a
+	at java.base@17.0.10/java.lang.Object.wait(Native Method)
+	-  waiting on java.lang.ref.ReferenceQueue$Lock@27cb983a
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:155)
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:176)
+	at java.base@17.0.10/java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:172)
+
+
+"Signal Dispatcher" daemon prio=9 Id=4 RUNNABLE
+
+
+"Attach Listener" daemon prio=5 Id=5 RUNNABLE
+
+
+"Common-Cleaner" daemon prio=8 Id=13 TIMED_WAITING on java.lang.ref.ReferenceQueue$Lock@290c72b3
+	at java.base@17.0.10/java.lang.Object.wait(Native Method)
+	-  waiting on java.lang.ref.ReferenceQueue$Lock@290c72b3
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:155)
+	at java.base@17.0.10/jdk.internal.ref.CleanerImpl.run(CleanerImpl.java:140)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+	at java.base@17.0.10/jdk.internal.misc.InnocuousThread.run(InnocuousThread.java:162)
+
+
+"Notification Thread" daemon prio=9 Id=14 RUNNABLE
+
+
+"JNA Cleaner" daemon prio=5 Id=19 WAITING on java.lang.ref.ReferenceQueue$Lock@2d33f34a
+	at java.base@17.0.10/java.lang.Object.wait(Native Method)
+	-  waiting on java.lang.ref.ReferenceQueue$Lock@2d33f34a
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:155)
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:176)
+	at MC-BOOTSTRAP/com.sun.jna@5.12.1/com.sun.jna.internal.Cleaner$1.run(Cleaner.java:58)
+
+
+"EntityEraserServiceSpecial" prio=5 Id=20 RUNNABLE
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.objectFieldOffset0(Native Method)
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.objectFieldOffset(Unsafe.java:1066)
+	at jdk.unsupported@17.0.10/sun.misc.Unsafe.objectFieldOffset(Unsafe.java:650)
+	at LAYER SERVICE/modid@0.0.9.1/net.apphhzp.eraserservice.HiddenService$HiddenRunnable/0x0000015cb925f790.run(HiddenService.java:258)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"Timer hack thread" daemon prio=5 Id=22 TIMED_WAITING
+	at java.base@17.0.10/java.lang.Thread.sleep(Native Method)
+	at TRANSFORMER/minecraft@1.20.1/net.minecraft.Util$9.run(Util.java:672)
+
+
+"modloading-worker-0" daemon prio=5 Id=24 WAITING on java.util.concurrent.ForkJoinPool@68317888
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.ForkJoinPool@68317888
+	at java.base@17.0.10/java.util.concurrent.locks.LockSupport.park(LockSupport.java:341)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1724)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1623)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+
+
+"modloading-worker-0" daemon prio=5 Id=26 TIMED_WAITING on java.util.concurrent.ForkJoinPool@68317888
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.ForkJoinPool@68317888
+	at java.base@17.0.10/java.util.concurrent.locks.LockSupport.parkUntil(LockSupport.java:410)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1726)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1623)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+
+
+"modloading-worker-0" daemon prio=5 Id=28 WAITING on java.util.concurrent.ForkJoinPool@68317888
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.ForkJoinPool@68317888
+	at java.base@17.0.10/java.util.concurrent.locks.LockSupport.park(LockSupport.java:341)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1724)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1623)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)
+
+
+"net.apphhzp.entityeraser.EntityeraserMod$$Lambda$4270/0x0000015cb9ab64a0@6fa152a0" daemon prio=5 Id=29 RUNNABLE
+	at TRANSFORMER/entityeraser@0.0.9.1/net.apphhzp.entityeraser.EntityeraserMod.lambda$new$0(EntityeraserMod.java:112)
+	at TRANSFORMER/entityeraser@0.0.9.1/net.apphhzp.entityeraser.EntityeraserMod$$Lambda$4270/0x0000015cb9ab64a0.run(Unknown Source)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"net.apphhzp.entityeraser.EntityeraserMod$$Lambda$4271/0x0000015cb9ab66b8@389d7866" daemon prio=5 Id=30 TIMED_WAITING
+	at java.base@17.0.10/java.lang.Thread.sleep(Native Method)
+	at java.base@17.0.10/java.lang.Thread.sleep(Thread.java:346)
+	at java.base@17.0.10/java.util.concurrent.TimeUnit.sleep(TimeUnit.java:446)
+	at TRANSFORMER/entityeraser@0.0.9.1/net.apphhzp.entityeraser.EntityeraserMod.lambda$new$2(EntityeraserMod.java:146)
+	at TRANSFORMER/entityeraser@0.0.9.1/net.apphhzp.entityeraser.EntityeraserMod$$Lambda$4271/0x0000015cb9ab66b8.run(Unknown Source)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"Yggdrasil Key Fetcher" daemon prio=5 Id=35 TIMED_WAITING on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@13c037fc
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@13c037fc
+	at java.base@17.0.10/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:252)
+	at java.base@17.0.10/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1672)
+	at java.base@17.0.10/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+	at java.base@17.0.10/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+	at java.base@17.0.10/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1062)
+	at java.base@17.0.10/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1122)
+	at java.base@17.0.10/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	...
+
+
+"Java2D Disposer" daemon prio=10 Id=50 WAITING on java.lang.ref.ReferenceQueue$Lock@591356dd
+	at java.base@17.0.10/java.lang.Object.wait(Native Method)
+	-  waiting on java.lang.ref.ReferenceQueue$Lock@591356dd
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:155)
+	at java.base@17.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:176)
+	at java.desktop@17.0.10/sun.java2d.Disposer.run(Disposer.java:145)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"AWT-Windows" daemon prio=6 Id=52 RUNNABLE (in native)
+	at java.desktop@17.0.10/sun.awt.windows.WToolkit.eventLoop(Native Method)
+	at java.desktop@17.0.10/sun.awt.windows.WToolkit.run(WToolkit.java:365)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"TimerQueue" daemon prio=5 Id=56 WAITING on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@81e87c7
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@81e87c7
+	at java.base@17.0.10/java.util.concurrent.locks.LockSupport.park(LockSupport.java:341)
+	at java.base@17.0.10/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:506)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3465)
+	at java.base@17.0.10/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3436)
+	at java.base@17.0.10/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1623)
+	at java.base@17.0.10/java.util.concurrent.DelayQueue.take(DelayQueue.java:217)
+	at java.desktop@17.0.10/javax.swing.TimerQueue.run(TimerQueue.java:172)
+	...
+
+	Number of locked synchronizers = 1
+	- java.util.concurrent.locks.ReentrantLock$NonfairSync@6b084716
+
+
+"Thread-1" daemon prio=5 Id=55 WAITING on java.lang.Object@700cea11
+	at java.base@17.0.10/java.lang.Object.wait(Native Method)
+	-  waiting on java.lang.Object@700cea11
+	at java.base@17.0.10/java.lang.Object.wait(Object.java:338)
+	at java.desktop@17.0.10/sun.awt.AWTAutoShutdown.activateBlockerThread(AWTAutoShutdown.java:349)
+	at java.desktop@17.0.10/sun.awt.AWTAutoShutdown.notifyThreadBusy(AWTAutoShutdown.java:175)
+	-  locked java.lang.Object@1af33eef
+	at java.desktop@17.0.10/java.awt.EventQueue$6.run(EventQueue.java:1124)
+	at java.desktop@17.0.10/java.awt.EventQueue$6.run(EventQueue.java:1115)
+	at java.base@17.0.10/java.security.AccessController.executePrivileged(AccessController.java:776)
+	at java.base@17.0.10/java.security.AccessController.doPrivileged(AccessController.java:318)
+	...
+
+	Number of locked synchronizers = 1
+	- java.util.concurrent.locks.ReentrantLock$NonfairSync@591526d2
+
+
+"DestroyJavaVM" prio=5 Id=60 RUNNABLE
+
+
+"D3D Screen Updater" daemon prio=7 Id=61 WAITING on java.lang.Object@c507b68
+	at java.base@17.0.10/java.lang.Object.wait(Native Method)
+	-  waiting on java.lang.Object@c507b68
+	at java.desktop@17.0.10/sun.java2d.d3d.D3DScreenUpdateManager.run(D3DScreenUpdateManager.java:425)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"Netty Server IO #0" daemon prio=8 Id=62 RUNNABLE (in native)
+	at java.base@17.0.10/sun.nio.ch.WEPoll.wait(Native Method)
+	at java.base@17.0.10/sun.nio.ch.WEPollSelectorImpl.doSelect(WEPollSelectorImpl.java:111)
+	at java.base@17.0.10/sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:129)
+	-  locked io.netty.channel.nio.SelectedSelectionKeySet@fd7384b
+	-  locked sun.nio.ch.WEPollSelectorImpl@53245108
+	at java.base@17.0.10/sun.nio.ch.SelectorImpl.select(SelectorImpl.java:146)
+	at MC-BOOTSTRAP/io.netty.transport@4.1.82.Final/io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at MC-BOOTSTRAP/io.netty.transport@4.1.82.Final/io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:879)
+	at MC-BOOTSTRAP/io.netty.transport@4.1.82.Final/io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at MC-BOOTSTRAP/io.netty.common@4.1.82.Final/io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)
+	...
+
+
+"Thread-3" daemon prio=8 Id=63 TIMED_WAITING
+	at java.base@17.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	at java.base@17.0.10/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:376)
+	at MC-BOOTSTRAP/com.electronwill.nightconfig.core@3.6.4/com.electronwill.nightconfig.core.file.FileWatcher$WatcherThread.run(FileWatcher.java:190)
+
+
+"FileSystemWatchService" daemon prio=8 Id=64 RUNNABLE (in native)
+	at java.base@17.0.10/sun.nio.fs.WindowsNativeDispatcher.GetQueuedCompletionStatus0(Native Method)
+	at java.base@17.0.10/sun.nio.fs.WindowsNativeDispatcher.GetQueuedCompletionStatus(WindowsNativeDispatcher.java:1065)
+	at java.base@17.0.10/sun.nio.fs.WindowsWatchService$Poller.run(WindowsWatchService.java:587)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"Server Watchdog" daemon prio=8 Id=68 RUNNABLE
+	at java.management@17.0.10/sun.management.ThreadImpl.dumpThreads0(Native Method)
+	at java.management@17.0.10/sun.management.ThreadImpl.dumpAllThreads(ThreadImpl.java:521)
+	at java.management@17.0.10/sun.management.ThreadImpl.dumpAllThreads(ThreadImpl.java:509)
+	at TRANSFORMER/minecraft@1.20.1/net.minecraft.server.dedicated.ServerWatchdog.run(ServerWatchdog.java:41)
+	at java.base@17.0.10/java.lang.Thread.run(Thread.java:842)
+
+
+"Netty Server IO #1" daemon prio=8 Id=70 RUNNABLE (in native)
+	at java.base@17.0.10/sun.nio.ch.WEPoll.wait(Native Method)
+	at java.base@17.0.10/sun.nio.ch.WEPollSelectorImpl.doSelect(WEPollSelectorImpl.java:111)
+	at java.base@17.0.10/sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:129)
+	-  locked io.netty.channel.nio.SelectedSelectionKeySet@7f04bcd5
+	-  locked sun.nio.ch.WEPollSelectorImpl@649e0965
+	at java.base@17.0.10/sun.nio.ch.SelectorImpl.select(SelectorImpl.java:146)
+	at MC-BOOTSTRAP/io.netty.transport@4.1.82.Final/io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at MC-BOOTSTRAP/io.netty.transport@4.1.82.Final/io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:879)
+	at MC-BOOTSTRAP/io.netty.transport@4.1.82.Final/io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at MC-BOOTSTRAP/io.netty.common@4.1.82.Final/io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)
+	...
+
+
+"AWT-Shutdown" prio=5 Id=78 RUNNABLE
+
+
+
+Stacktrace:
+	at net.minecraft.server.dedicated.ServerWatchdog.run(ServerWatchdog.java:43) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at java.lang.Thread.run(Thread.java:842) ~[?:?] {}
+
+
+-- Performance stats --
+Details:
+	Random tick rate: 3
+	Level stats: ResourceKey[minecraft:dimension / minecraft:overworld]: players: 1, entities: 1,1,1,0,0,0,625 [minecraft:player:1], block_entities: 72 [<null>:72], block_ticks: 0, fluid_ticks: 0, chunk_source: Chunks[S] W: 0 E: 1,1,1,0,0,0,625,
+ResourceKey[minecraft:dimension / minecraft:the_nether]: players: 0, entities: 0,0,0,0,0,0,0 [], block_entities: 0 [], block_ticks: 0, fluid_ticks: 0, chunk_source: Chunks[S] W: 0 E: 0,0,0,0,0,0,0,
+ResourceKey[minecraft:dimension / minecraft:the_end]: players: 0, entities: 0,0,0,0,0,0,0 [], block_entities: 0 [], block_ticks: 0, fluid_ticks: 0, chunk_source: Chunks[S] W: 0 E: 0,0,0,0,0,0,0
+Stacktrace:
+	at net.minecraft.server.dedicated.ServerWatchdog.run(ServerWatchdog.java:43) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at java.lang.Thread.run(Thread.java:842) ~[?:?] {}
+
+
+-- System Details --
+Details:
+	Minecraft Version: 1.20.1
+	Minecraft Version ID: 1.20.1
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 17.0.10, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode, sharing), Oracle Corporation
+	Memory: 1808957440 bytes (1725 MiB) / 2789212160 bytes (2660 MiB) up to 8527020032 bytes (8132 MiB)
+	CPUs: 12
+	Processor Vendor: GenuineIntel
+	Processor Name: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+	Identifier: Intel64 Family 6 Model 165 Stepping 2
+	Microarchitecture: unknown
+	Frequency (GHz): 2.59
+	Number of physical packages: 1
+	Number of physical CPUs: 6
+	Number of logical CPUs: 12
+	Graphics card #0 name: Intel(R) UHD Graphics
+	Graphics card #0 vendor: Intel Corporation (0x8086)
+	Graphics card #0 VRAM (MB): 1024.00
+	Graphics card #0 deviceId: 0x9bc4
+	Graphics card #0 versionInfo: DriverVersion=31.0.101.2134
+	Graphics card #1 name: NVIDIA Quadro T2000
+	Graphics card #1 vendor: NVIDIA (0x10de)
+	Graphics card #1 VRAM (MB): 4095.00
+	Graphics card #1 deviceId: 0x1fb8
+	Graphics card #1 versionInfo: DriverVersion=31.0.15.3878
+	Memory slot #0 capacity (MB): 8192.00
+	Memory slot #0 clockSpeed (GHz): 2.67
+	Memory slot #0 type: DDR4
+	Memory slot #1 capacity (MB): 8192.00
+	Memory slot #1 clockSpeed (GHz): 2.67
+	Memory slot #1 type: DDR4
+	Memory slot #2 capacity (MB): 8192.00
+	Memory slot #2 clockSpeed (GHz): 2.67
+	Memory slot #2 type: DDR4
+	Memory slot #3 capacity (MB): 8192.00
+	Memory slot #3 clockSpeed (GHz): 3.20
+	Memory slot #3 type: DDR4
+	Virtual memory max (MB): 37383.33
+	Virtual memory used (MB): 28103.34
+	Swap memory total (MB): 4864.00
+	Swap memory used (MB): 150.27
+	JVM Flags: 0 total; 
+	Server Running: true
+	Player Count: 1 / 20; [ServerPlayer['apphhzp'/2, l='ServerLevel[world]', x=9.65, y=91.00, z=-10.72]]
+	Data Packs: vanilla, mod:entityeraser, mod:forge, mod:apphhzp_lib
+	Enabled Feature Flags: minecraft:vanilla
+	World Generation: Stable
+	Is Modded: Definitely; Server brand changed to 'forge'
+	Type: Dedicated Server (map_server.txt)
+	ModLauncher: 10.0.9+10.0.9+main.dcd20f30
+	ModLauncher launch target: forgeserveruserdev
+	ModLauncher naming: mcp
+	ModLauncher services: 
+		mixin-0.8.5.jar mixin PLUGINSERVICE 
+		eventbus-6.0.5.jar eventbus PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar slf4jfixer PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar object_holder_definalize PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar runtime_enum_extender PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar capability_token_subclass PLUGINSERVICE 
+		accesstransformers-8.0.4.jar accesstransformer PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar runtimedistcleaner PLUGINSERVICE 
+		modlauncher-10.0.9.jar mixin TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar  EntityEraser TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar fml TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar apphhzpLIB TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		minecraft@1.0
+		lowcodefml@null
+		javafml@null
+	Mod List: 
+		forge-1.20.1-47.2.0_mapped_official_1.20.1.jar    |Minecraft                     |minecraft                     |1.20.1              |DONE      |Manifest: a1:d4:5e:04:4f:d3:d6:e0:7b:37:97:cf:77:b0:de:ad:4a:47:ce:8c:96:49:5f:0a:cf:8c:ae:b2:6d:4b:8a:3f
+		modid-0.0.9.1.jar                                 |entityeraser                  |entityeraser                  |0.0.9.1             |DONE      |Manifest: NOSIGNATURE
+		                                                  |Forge                         |forge                         |47.2.0              |DONE      |Manifest: NOSIGNATURE
+		apphhzpLIB-1.0.8.1.jar                            |apphhzpLIB                    |apphhzp_lib                   |1.0.8.1             |DONE      |Manifest: NOSIGNATURE
+	Crash Report UUID: cc169efd-d4cc-4c0a-9d8a-a6b814a2c9e4
+	FML: 47.2
+	Forge: net.minecraftforge:47.2.0

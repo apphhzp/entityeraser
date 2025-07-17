@@ -1,6 +1,6 @@
 package net.apphhzp.entityeraser.shitmountain;
 
-import apphhzp.lib.ClassHelper;
+import apphhzp.lib.ClassHelperSpecial;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -11,7 +11,6 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Divisor;
 import it.unimi.dsi.fastutil.ints.IntConsumer;
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import net.apphhzp.entityeraser.screen.EntityEraserDeathScreen;
 import net.apphhzp.entityeraser.util.EntityUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -24,6 +23,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.*;
 import net.minecraft.client.renderer.GameRenderer;
@@ -77,7 +77,7 @@ public final class DeathRenderer {
         }
     }
 
-    public static void staticInit(EntityEraserDeathScreen gui, Minecraft p_96607_, int p_96608_, int p_96609_) {
+    public static void staticInit(DeathScreen gui, Minecraft p_96607_, int p_96608_, int p_96609_) {
         gui.minecraft = p_96607_;
         gui.font = p_96607_.font;
         gui.width = p_96608_;
@@ -99,10 +99,10 @@ public final class DeathRenderer {
         gui.triggerImmediateNarration(false);
         gui.suppressNarration(Screen.NARRATE_SUPPRESS_AFTER_INIT_TIME);
     }
-    public static void staticRender(EntityEraserDeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_) {
+    public static void staticRender(DeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_) {
         staticRender(screen,guiGraphics,p_283551_,p_283002_,p_281981_,-2);
     }
-    public static void staticRender(EntityEraserDeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_,int index) {
+    public static void staticRender(DeathScreen screen, GuiGraphics guiGraphics, int p_283551_, int p_283002_, float p_281981_,int index) {
         int colour = EntityUtil.getSmoothColor(128, 0, 2000D), c2 = EntityUtil.getSmoothColor(255, Mth.PI / 2, 2000D);
         fillGradient(guiGraphics, 0, 0, screen.width, screen.height, EntityUtil.getSmoothColor(64, 0, 2000D), colour);
         {
@@ -144,11 +144,11 @@ public final class DeathRenderer {
             blit(guiGraphics, AbstractWidget.WIDGETS_LOCATION, screen.exitToTitleButton.getX() + screen.exitToTitleButton.getWidth() - 17, screen.exitToTitleButton.getY() + 3, 182, 24, 15, 15);
         }
     }
-    public static void render(Button button, GuiGraphics p_282421_, int p_93658_, int p_93659_, float p_93660_, EntityEraserDeathScreen deathScreen) {
+    public static void render(Button button, GuiGraphics p_282421_, int p_93658_, int p_93659_, float p_93660_, DeathScreen deathScreen) {
         render(button,p_282421_,p_93658_,p_93659_,p_93660_,deathScreen,0);
     }
 
-    public static void render(Button button, GuiGraphics p_282421_, int p_93658_, int p_93659_, float p_93660_, EntityEraserDeathScreen deathScreen,int forceHovered) {
+    public static void render(Button button, GuiGraphics p_282421_, int p_93658_, int p_93659_, float p_93660_, DeathScreen deathScreen,int forceHovered) {
         button.isHovered =forceHovered==1||(p_93658_ >= button.x && p_93659_ >= button.y && p_93658_ < button.x + button.width && p_93659_ < button.y + button.height);
         if (forceHovered==2){
             button.isHovered=false;
@@ -261,7 +261,7 @@ public final class DeathRenderer {
         return 46 + i * 20;
     }
 
-    private static void updateTooltip(Button button, EntityEraserDeathScreen screen) {
+    private static void updateTooltip(Button button, DeathScreen screen) {
         if (button.tooltip != null) {
             boolean flag = button.isHovered || button.isFocused() && Minecraft.getInstance().getLastInputType().isKeyboard();
             if (flag != button.wasHoveredOrFocused) {
@@ -360,7 +360,7 @@ public final class DeathRenderer {
         return Mth.ceil(font.splitter.stringWidth(p_92853_));
     }
 
-    private static Style getClickedComponentStyleAt(EntityEraserDeathScreen screen, int p_95918_) {
+    private static Style getClickedComponentStyleAt(DeathScreen screen, int p_95918_) {
         int $$1 = screen.minecraft.font.width(screen.causeOfDeath);
         int $$2 = screen.width / 2 - $$1 / 2;
         int $$3 = screen.width / 2 + $$1 / 2;
@@ -1248,13 +1248,13 @@ public final class DeathRenderer {
     public static ByteBuffer vertexBuffer(BufferBuilder.RenderedBuffer buffer) {
         int i = buffer.pointer + buffer.drawState.vertexBufferStart();
         int j = buffer.pointer + buffer.drawState.vertexBufferEnd();
-        return bufferSlice(ClassHelper.getOuterInstance(buffer, BufferBuilder.class, "f_231188_"), i, j);
+        return bufferSlice(ClassHelperSpecial.getOuterInstance(buffer, BufferBuilder.class, "f_231188_"), i, j);
     }
 
     public static ByteBuffer indexBuffer(BufferBuilder.RenderedBuffer buffer) {
         int i = buffer.pointer + buffer.drawState.indexBufferStart();
         int j = buffer.pointer + buffer.drawState.indexBufferEnd();
-        return bufferSlice(ClassHelper.getOuterInstance(buffer, BufferBuilder.class, "f_231188_"), i, j);
+        return bufferSlice(ClassHelperSpecial.getOuterInstance(buffer, BufferBuilder.class, "f_231188_"), i, j);
     }
 
 
@@ -1266,7 +1266,7 @@ public final class DeathRenderer {
         if (buffer.released) {
             throw new IllegalStateException("Buffer has already been released!");
         } else {
-            releaseRenderedBuffer(ClassHelper.getOuterInstance(buffer, BufferBuilder.class, "f_231188_"));
+            releaseRenderedBuffer(ClassHelperSpecial.getOuterInstance(buffer, BufferBuilder.class, "f_231188_"));
             buffer.released = true;
         }
     }

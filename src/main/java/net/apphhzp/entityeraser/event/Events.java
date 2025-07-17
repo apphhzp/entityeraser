@@ -1,6 +1,5 @@
 package net.apphhzp.entityeraser.event;
 
-import net.apphhzp.entityeraser.item.TestItem;
 import net.apphhzp.entityeraser.util.EntityUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -33,29 +32,29 @@ public class Events {
 		Minecraft mc= Minecraft.getInstance();
 
 //		if (event.phase==TickEvent.Phase.END) {
-		if (TestItem.fboId!=0) {
-//			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, TestItem.fboId);
-//			GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,0);
-//			GL11.glDrawBuffer(GL11.GL_BACK);
-//			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-//			GL11.glDrawBuffer(GL11.GL_LEFT);
-//			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-//			GL11.glDrawBuffer(GL11.GL_BACK);
-//			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-//			GL11.glDrawBuffer(GL11.GL_FRONT);
-//			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					0, 0, mc.window.getWidth(), mc.window.getHeight(),
-//					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-//			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,0);
-//			GL11.glDrawBuffer(GL11.GL_BACK);
-//			GL11.glFinish();
-		}
+//		if (TestItem.fboId!=0) {
+////			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, TestItem.fboId);
+////			GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER,0);
+////			GL11.glDrawBuffer(GL11.GL_BACK);
+////			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+////			GL11.glDrawBuffer(GL11.GL_LEFT);
+////			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+////			GL11.glDrawBuffer(GL11.GL_BACK);
+////			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+////			GL11.glDrawBuffer(GL11.GL_FRONT);
+////			GL30.glBlitFramebuffer(0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					0, 0, mc.window.getWidth(), mc.window.getHeight(),
+////					GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+////			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER,0);
+////			GL11.glDrawBuffer(GL11.GL_BACK);
+////			GL11.glFinish();
+//		}
 	}
 
 	@SubscribeEvent
@@ -166,6 +165,9 @@ public class Events {
 			EntityUtil.killEntity(event.getEntity());
 			event.setCanceled(true);
 		}
+		if (EntityUtil.timeStop&&!EntityUtil.shouldUpdate(event.getEntity())){
+			event.setCanceled(true);
+		}
 		if (EntityUtil.shouldProtect(event.getEntity())){
 			EntityUtil.defense((Player) event.getEntity());
 		}
@@ -229,4 +231,6 @@ public class Events {
 			event.setCanceled(true);
 		}
 	}
+
+
 }

@@ -13,14 +13,13 @@
  */
 package net.apphhzp.entityeraser;
 
-import apphhzp.lib.ClassHelper;
-import apphhzp.lib.OnlyInDefineClassHelper;
+import apphhzp.lib.natives.NativeUtil;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.apphhzp.entityeraser.init.EntityeraserModItems;
 import net.apphhzp.entityeraser.init.EntityeraserModTabs;
 import net.apphhzp.entityeraser.network.*;
+import net.apphhzp.entityeraser.util.EntityEraserBufferBuilder;
 import net.apphhzp.entityeraser.util.EntityUtil;
-import net.apphhzp.entityeraser.util.ProtectedBufferBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -45,7 +44,6 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
@@ -57,23 +55,24 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static apphhzp.lib.ClassHelperSpecial.createHiddenThread;
+
 @Mod("entityeraser")
 public class EntityeraserMod {
 	public static final Logger LOGGER = LogManager.getLogger(EntityeraserMod.class);
 	public static final String MODID = "entityeraser";
 	public static final boolean debug=false;
-	public static final boolean enableAllReturnKill;
 	static {
 		//BytecodesGetter.useOriginalBytecodes=false;
-        //System.err.println("saidsad:"+ EntityEraserTransformer.isExtends("org/objectweb/asm/tree/MethodInsnNode","org/objectweb/asm/tree/AbstractInsnNode"));
+        //System.err.println("saidsad:"+ EntityEraserTransformerSpecial.isExtends("org/objectweb/asm/tree/MethodInsnNode","org/objectweb/asm/tree/AbstractInsnNode"));
         try {
-			Class.forName("apphhzp.lib.ClassHelper");
+			Class.forName("apphhzp.lib.ClassHelperSpecial");
 		}catch (ClassNotFoundException t){
 			LOGGER.fatal("MISSING APPHHZP_LIB!");
 			System.exit(114514);
 		}
 		if (debug){
-			ClassHelper.instImpl.addTransformer(new ClassFileTransformer() {
+			NativeUtil.createInstrumentationImpl().addTransformer(new ClassFileTransformer() {
 				@Override
 				public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 					if (className.startsWith("net/apphhzp/entityeraser/")) {
@@ -83,49 +82,14 @@ public class EntityeraserMod {
 				}
 			},true);
 		}
-		if(ClassHelper.isHotspotJVM){
-			ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.util.EntityUtil$DisableRemoveSet",EntityeraserMod.class,true,null);
-			ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.util.EntityUtil",EntityeraserMod.class,true,null);
-			ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.event.Events",EntityeraserMod.class,true,null);
-			if (FMLEnvironment.dist.isClient()){
-				ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.PoseStackHelper",EntityeraserMod.class,true,null);
-				ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.MinecraftRenderers",EntityeraserMod.class,true,null);
-				ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.util.DeadBufferBuilder",EntityeraserMod.class,true,null);
-				ClassHelper.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers",EntityeraserMod.class,true,null);
-			}
-		}else {
-			try {
-				defineClass("net.apphhzp.entityeraser.util.EntityUtil$DisableRemoveSet");
-				defineClass("net.apphhzp.entityeraser.util.EntityUtil");
-				defineClass("net.apphhzp.entityeraser.event.Events");
-				defineClass("net.apphhzp.entityeraser.util.EntityEraserEventBus");
-				if (FMLEnvironment.dist.isClient()) {
-					defineClass("net.apphhzp.entityeraser.shitmountain.PoseStackHelper");
-					defineClass("net.apphhzp.entityeraser.shitmountain.MinecraftRenderers");
-					defineClass("net.apphhzp.entityeraser.util.DeadBufferBuilder");
-					defineClass("net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers");
-				}
-			}catch (Throwable t){
-				throw new RuntimeException(t);
-			}
-		}
-		enableAllReturnKill=get("/enableAllReturnKill.txt");
+
+
 	}
 
-	private static void defineClass(String name)throws Throwable{
-		if (ClassHelper.findLoadedClass(EntityeraserMod.class.getClassLoader(),name)==null) {
-			InputStream is = EntityeraserMod.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
-			byte[] dat = new byte[is.available()];
-			is.read(dat);
-			is.close();
-			dat= OnlyInDefineClassHelper.handle(dat,name);
-			ClassHelper.defineClass(name, dat, EntityeraserMod.class.getClassLoader());
-		}
-	}
 
 	public EntityeraserMod() {
 //		if (!AllReturn.added){
-//			ClassHelper.addExportImpl(AllReturn.class.getModule(),"net.apphhzp.entityeraser");
+//			ClassHelperSpecial.addExportImpl(AllReturn.class.getModule(),"net.apphhzp.entityeraser");
 //			AllReturn.added=true;
 //		}
 		MinecraftForge.EVENT_BUS.register(EntityeraserMod.class);
@@ -139,6 +103,7 @@ public class EntityeraserMod {
 		addNetworkMessage(ProtectInventoryPacket.class, ProtectInventoryPacket::toBytes, ProtectInventoryPacket::new, ProtectInventoryPacket::handler);
 		addNetworkMessage(AllReturnPacket.class,AllReturnPacket::toBytes,AllReturnPacket::new,AllReturnPacket::handler);
 		addNetworkMessage(EraserAttackPacket.class,EraserAttackPacket::toBytes,EraserAttackPacket::new,EraserAttackPacket::handler);
+		addNetworkMessage(TimeStopPacket.class,TimeStopPacket::toBytes,TimeStopPacket::new,TimeStopPacket::handler);
 		run(()->{
 			for(;;){
 				try {
@@ -186,6 +151,7 @@ public class EntityeraserMod {
 			}
 		});
 	}
+
 	@OnlyIn(Dist.CLIENT)
 	private static void runClientThread(){
 		run(() -> {
@@ -211,7 +177,9 @@ public class EntityeraserMod {
 							}
 							if (EntityUtil.disableGUI){
 								EntityUtil.clearScreen(mc);
-								Tesselator.getInstance().builder= ProtectedBufferBuilder.getInstance();
+							}
+							if (EntityEraserBufferBuilder.shouldReplace()){
+								Tesselator.getInstance().builder= EntityEraserBufferBuilder.getInstance();
 							}
 						}
 						if (EntityUtil.shouldDestroyRenderer){
@@ -231,29 +199,7 @@ public class EntityeraserMod {
 	}
 
 	private static void run(Runnable runnable){
-		ClassHelper.createHiddenThread(runnable,runnable.toString());
-	}
-
-	private static boolean get(String name) {
-		try {
-			InputStream is = EntityeraserMod.class.getResourceAsStream(name);
-			if (is == null) {
-                LOGGER.error("File({}) not found", name);
-				return false;
-			}
-			byte[] dat = new byte[is.available()];
-			is.read(dat);
-			is.close();
-			char[] text = new char[dat.length];
-			for (int i = 0; i < dat.length; i++) {
-				text[i] = (char) dat[i];
-			}
-			String s = String.copyValueOf(text);
-			return !s.contains("false") && s.contains("true");
-		} catch (Throwable t) {
-			LogManager.getLogger().catching(t);
-			return false;
-		}
+		createHiddenThread(runnable,runnable.toString());
 	}
 
 	private static final String PROTOCOL_VERSION = "1";

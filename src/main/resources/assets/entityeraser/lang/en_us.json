@@ -9,6 +9,7 @@
   "item.entityeraser.destroy_renderer": "Destroy Renderers",
   "item.entityeraser.test_item": "Test Item",
   "item.entityeraser.all_return": "All return control",
+  "item.entityeraser.time_stop": "Time stop",
   "item.entityeraser.gdi_kill_self": "Rapid death(GDI)",
   "item.entityeraser.entity_eraser.tooltip1": "Powerful entity eraser",
   "item.entityeraser.entity_eraser.tooltip2": "PS: Invalid for only rendering entities",
@@ -24,5 +25,6 @@
   "DisableGUIMode.change": "Disable GUI: %s",
   "DisableEntityCallMethodsMode.change": "Disable calling entities' own methods: %s",
   "ProtectInventoryMode.change": "Protect inventory(SUPER MODE): %s",
-  "AllReturnMode.change": "All return: %s"
+  "AllReturnMode.change": "All return: %s",
+  "TimeStop.change": "Time stop: %s"
 }

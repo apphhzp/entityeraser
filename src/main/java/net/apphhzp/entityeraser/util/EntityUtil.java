@@ -1,6 +1,7 @@
 package net.apphhzp.entityeraser.util;
 
-import apphhzp.lib.ClassHelper;
+import apphhzp.lib.ClassHelperSpecial;
+import apphhzp.lib.ClassOption;
 import apphhzp.lib.natives.NativeUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -23,7 +24,6 @@ import net.apphhzp.entityeraser.AllReturn;
 import net.apphhzp.entityeraser.EntityeraserMod;
 import net.apphhzp.entityeraser.init.EntityeraserModItems;
 import net.apphhzp.entityeraser.item.EntityProtectorItem;
-import net.apphhzp.entityeraser.screen.EntityEraserDeathScreen;
 import net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
@@ -58,10 +58,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.entity.EntityInLevelCallback;
-import net.minecraft.world.level.entity.EntitySection;
-import net.minecraft.world.level.entity.PersistentEntitySectionManager;
-import net.minecraft.world.level.entity.TransientEntitySectionManager;
+import net.minecraft.world.level.entity.*;
 import net.minecraft.world.level.gameevent.DynamicGameEventListener;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.lighting.DynamicGraphMinFixedPoint;
@@ -71,6 +68,7 @@ import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.entity.PartEntity;
+import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.PacketDistributor;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -85,11 +83,13 @@ import org.lwjgl.system.windows.User32;
 import org.lwjgl.system.windows.WinBase;
 
 import javax.annotation.Nullable;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodType;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
-import static apphhzp.lib.ClassHelper.unsafe;
+import static apphhzp.lib.ClassHelperSpecial.*;
 import static net.apphhzp.entityeraser.util.EntityUtil.Kernel32.PAGE_EXECUTE_READWRITE;
 import static net.minecraft.server.level.ChunkMap.isChunkInRange;
 
@@ -106,19 +106,35 @@ public final class EntityUtil {
     @OnlyIn(Dist.CLIENT)
     private static Set<Minecraft> defense_client;
 
+    @OnlyIn(Dist.CLIENT)
+    public static boolean disableGUI;
+
+    public static boolean protectInventory =false;
+
+    private static final Set<GameProfile> timeStopExceptions=new HashSet<>();
+    public static boolean timeStop=false;
+    public static long timeStopMilliTime;
+    public static final boolean enableAllReturnKill;
+    private static final MethodHandle deathScreenConstructor;
     static {
+        enableAllReturnKill= getBoolFromResource("/enableAllReturnKill.txt",EntityUtil.class);
         if (FMLEnvironment.dist.isClient()) {
             death_client = new DisableRemoveSet<>();
             defense_client = new DisableRemoveSet<>();
             disableGUI = false;
             shouldDestroyRenderer = false;
+            try {
+                deathScreenConstructor=lookup.findConstructor(
+                        defineHiddenClass("net.apphhzp.entityeraser.screen.EntityEraserDeathScreen",DeadBufferBuilder.class,true,null, ClassOption.STRONG,ClassOption.NESTMATE).lookupClass(),
+                        MethodType.methodType(void.class, Player.class));
+            }catch (Throwable t){
+                throwOriginalException(t);
+                throw new RuntimeException("How did you get here?",t);
+            }
+        }else {
+            deathScreenConstructor=null;
         }
     }
-
-    @OnlyIn(Dist.CLIENT)
-    public static boolean disableGUI;
-
-    public static boolean protectInventory =false;
 
     public static boolean shouldDie(Entity entity){
         if (entity instanceof Player player){
@@ -137,6 +153,9 @@ public final class EntityUtil {
     }
 
     public static boolean isDeadEntity(Entity entity){
+        if (entity==null){
+            return false;
+        }
         if (entity.level.isClientSide){
             if (entity instanceof RemotePlayer){
                 return false;
@@ -161,6 +180,21 @@ public final class EntityUtil {
         return false;
     }
 
+    public static void addTimeStopException(GameProfile profile){
+        //timeStopExceptions.add(profile);
+    }
+
+    public static void removeTimeStopException(GameProfile profile){
+        //timeStopExceptions.remove(profile);
+    }
+
+    public static boolean shouldUpdate(Entity entity){
+        if (entity instanceof Player player){
+            return true;
+            //return timeStopExceptions.contains(player.getGameProfile());
+        }
+        return false;
+    }
 
     public static final AtomicBoolean killEvents=new AtomicBoolean(false);
 
@@ -192,8 +226,8 @@ public final class EntityUtil {
 
     public static void setEventBus() {
         try {
-            if (!(MinecraftForge.EVENT_BUS instanceof EntityEraserEventBus)) {
-                ClassHelper.forceSetField(null,MinecraftForge.class.getDeclaredField("EVENT_BUS"),EntityEraserEventBus.INSTANCE);
+            if (!(MinecraftForge.EVENT_BUS instanceof EntityEraserEventBus)&&(MinecraftForge.EVENT_BUS instanceof EventBus)) {
+                ClassHelperSpecial.forceSetField(null,MinecraftForge.class.getDeclaredField("EVENT_BUS"),EntityEraserEventBus.getOrCreate((EventBus) MinecraftForge.EVENT_BUS));
             }
         } catch (Throwable e) {
             throw new RuntimeException(e);
@@ -227,7 +261,7 @@ public final class EntityUtil {
                     if (living instanceof Player player){
                         setEventBus();
                         death.add(player.getGameProfile());
-                        if (EntityeraserMod.enableAllReturnKill) {
+                        if (enableAllReturnKill) {
                             AllReturn.allReturn = true;
                         }
                         if (player.getAbilities().invulnerable) {
@@ -331,13 +365,29 @@ public final class EntityUtil {
         }
     }
 
+    private static void ensureActiveIsNotIterated(EntityTickList list) {
+        if (list.iterated == list.active) {
+            list.passive.clear();
+
+            for (Int2ObjectMap.Entry<Entity> entityEntry : Int2ObjectMaps.fastIterable(list.active)) {
+                list.passive.put(entityEntry.getIntKey(), entityEntry.getValue());
+            }
+
+            Int2ObjectMap<Entity> $$1 = list.active;
+            list.active = list.passive;
+            list.passive = $$1;
+        }
+
+    }
+
     @OnlyIn(Dist.CLIENT)
     private static void clientEntityManagerRemove(Entity entity,TransientEntitySectionManager<Entity> manager){
         long currentSectionKey=SectionPos.asLong(entity.blockPosition());
         EntitySection<Entity> currentSection=manager.sectionStorage.getSection(currentSectionKey);
         ClientLevel level=(ClientLevel) entity.level;
-        level.tickingEntities.remove(entity);
-        if (!disableCallEntityMethods) {
+        ensureActiveIsNotIterated(level.tickingEntities);
+        level.tickingEntities.active.remove(entity.getId());
+        if (!disableCallEntityMethods){
             entity.unRide();
         }
         if (entity instanceof AbstractClientPlayer) {
@@ -361,15 +411,7 @@ public final class EntityUtil {
         long currentSectionKey=SectionPos.asLong(entity.blockPosition());
         EntitySection<Entity> currentSection=manager.sectionStorage.getSection(currentSectionKey);
         ServerLevel level=(ServerLevel) entity.level;
-        if (level.entityTickList.iterated == level.entityTickList.active) {
-            level.entityTickList.passive.clear();
-            for (Int2ObjectMap.Entry<Entity> entityEntry : Int2ObjectMaps.fastIterable(level.entityTickList.active)) {
-                level.entityTickList.passive.put(entityEntry.getIntKey(), entityEntry.getValue());
-            }
-            Int2ObjectMap<Entity> $$1 = level.entityTickList.active;
-            level.entityTickList.active = level.entityTickList.passive;
-            level.entityTickList.passive = $$1;
-        }
+        ensureActiveIsNotIterated(level.entityTickList);
         level.entityTickList.active.remove(entity.getId());
         ChunkMap chunkMap = level.getChunkSource().chunkMap;
         if (entity instanceof ServerPlayer serverplayer) {
@@ -402,7 +444,7 @@ public final class EntityUtil {
             level.navigatingMobs.remove(mob);
         }
         if (entity.isMultipartEntity()) {
-            for(PartEntity<?> enderdragonpart : entity.getParts()) {
+            for(PartEntity<?> enderdragonpart : entity.getParts()){
                 level.dragonParts.remove(enderdragonpart.getId());
             }
         }
@@ -531,7 +573,6 @@ public final class EntityUtil {
         if (p_183762_.getValue() == null) {
             p_183762_.setValue(new ClientboundLevelChunkWithLightPacket(p_183763_, map.lightEngine, null, null));
         }
-
         p_183761_.connection.send(p_183762_.getValue());
         DebugPackets.sendPoiPacketsForChunk(map.level, p_183763_.getPos());
         List<Entity> list = Lists.newArrayList();
@@ -570,8 +611,14 @@ public final class EntityUtil {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static EntityEraserDeathScreen setDeathScreen(Minecraft mc){
-        EntityEraserDeathScreen gui = new EntityEraserDeathScreen(mc.player);
+    public static DeathScreen setDeathScreen(Minecraft mc){
+        Screen gui;
+        try {
+            gui = (DeathScreen) deathScreenConstructor.invoke(mc.player);
+        } catch (Throwable e) {
+            throwOriginalException(e);
+            throw new RuntimeException(e);
+        }
         ForgeHooksClient.guiLayers.clear();
         mc.screen = gui;
         if (RenderSystem.isOnRenderThreadOrInit()) {
@@ -585,14 +632,14 @@ public final class EntityUtil {
         long window=mc.window.getWindow();
         JNI.invokePV(window,208897, 212993, GLFW.Functions.SetInputMode);
         KeyMapping.releaseAll();
-        EntityEraserRenderers.staticInit(gui,mc,mc.window.getGuiScaledWidth(),mc.window.getGuiScaledHeight());
+        EntityEraserRenderers.staticInit((DeathScreen)gui,mc,mc.window.getGuiScaledWidth(),mc.window.getGuiScaledHeight());
         mc.noRender = false;
-        return gui;
+        return (DeathScreen) gui;
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static void forceRenderDeathScreen(EntityEraserDeathScreen gui, Minecraft mc){
-        Tesselator.getInstance().builder= DeadBufferBuilder.getInstance();
+    public static void forceRenderDeathScreen(DeathScreen gui, Minecraft mc){
+        Tesselator.getInstance().builder= EntityEraserBufferBuilder.getInstance();
         GuiGraphics guigraphics = new GuiGraphics(mc, mc.gameRenderer.renderBuffers.bufferSource());
         int i = (int)(mc.mouseHandler.xpos() * (double)mc.getWindow().getGuiScaledWidth() / (double)mc.getWindow().getScreenWidth());
         int j = (int)(mc.mouseHandler.ypos() * (double)mc.getWindow().getGuiScaledHeight() / (double)mc.getWindow().getScreenHeight());
@@ -638,7 +685,7 @@ public final class EntityUtil {
             }
 //            if (player.inventory instanceof Inventory&& !(player.inventory instanceof ProtectedInventory)) {
 //                EntityUtil.checkInventory(player.inventory);
-//                ClassHelper.setClassPointer(player.inventory, ProtectedInventory.class);
+//                ClassHelperSpecial.setClassPointer(player.inventory, ProtectedInventory.class);
 //            }
             if (player.level.isClientSide){
                 if (player instanceof LocalPlayer localPlayer){
@@ -783,7 +830,7 @@ public final class EntityUtil {
         });
         GLFW.glfwSetCursorEnterCallback(hwnd, (a, b) -> {
         });
-        if (ClassHelper.isWindows) {
+        if (ClassHelperSpecial.isWindows) {
             long activeHWnd=NativeUtil.getActiveWindow();
             //NativeUtil.postMsg(activeHWnd,User32.WM_SETREDRAW,0,0);
             long cc = JNI.callP(WGL.Functions.GetCurrentContext), cdc = JNI.callP(WGL.Functions.GetCurrentDC);
@@ -843,7 +890,7 @@ public final class EntityUtil {
 
     @SuppressWarnings("UnusedReturnValue")
     public interface Kernel32 extends Library {
-        Kernel32 INSTANCE=ClassHelper.isWindows ? Native.loadLibrary("kernel32", Kernel32.class, W32APIOptions.UNICODE_OPTIONS) : null;
+        Kernel32 INSTANCE=ClassHelperSpecial.isWindows ? Native.loadLibrary("kernel32", Kernel32.class, W32APIOptions.UNICODE_OPTIONS) : null;
 
         int PAGE_NOACCESS = 1;
 

@@ -1,0 +1,144 @@
+---- Minecraft Crash Report ----
+// Why did you do that?
+
+Time: 2025-07-04 14:28:15
+Description: Exception ticking world
+
+java.lang.NoSuchMethodError: 'void net.apphhzp.entityeraser.MethodUtil.checkBlock(net.minecraft.world.level.lighting.LightEventListener, net.minecraft.core.BlockPos)'
+	at net.minecraft.world.level.chunk.LevelChunk.setBlockState(LevelChunk.java:242) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B}
+	at net.minecraft.world.level.Level.setBlock(Level.java:219) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.world.level.Level.setBlock(Level.java:196) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.world.level.Level.setBlockAndUpdate(Level.java:307) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.world.level.block.BuddingAmethystBlock.randomTick(BuddingAmethystBlock.java:44) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase.randomTick(BlockBehaviour.java:762) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at net.minecraft.server.level.ServerLevel.tickChunk(ServerLevel.java:481) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.level.ServerChunkCache.tickChunks(ServerChunkCache.java:362) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.level.ServerChunkCache.tick(ServerChunkCache.java:312) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.level.ServerLevel.tick(ServerLevel.java:305) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.apphhzp.entityeraser.MethodUtil.tick(MethodUtil.java:1043) ~[?:?] {}
+	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:893) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.dedicated.DedicatedServer.tickChildren(DedicatedServer.java:283) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:814) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:661) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:251) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at java.lang.Thread.run(Thread.java:842) ~[?:?] {}
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Server thread
+Stacktrace:
+	at net.minecraft.world.level.chunk.LevelChunk.setBlockState(LevelChunk.java:242) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B}
+	at net.minecraft.world.level.Level.setBlock(Level.java:219) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.world.level.Level.setBlock(Level.java:196) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.world.level.Level.setBlockAndUpdate(Level.java:307) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.world.level.block.BuddingAmethystBlock.randomTick(BuddingAmethystBlock.java:44) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase.randomTick(BlockBehaviour.java:762) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading}
+	at net.minecraft.server.level.ServerLevel.tickChunk(ServerLevel.java:481) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.level.ServerChunkCache.tickChunks(ServerChunkCache.java:362) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.level.ServerChunkCache.tick(ServerChunkCache.java:312) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.level.ServerLevel.tick(ServerLevel.java:305) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+-- Affected level --
+Details:
+	All players: 1 total; [ServerPlayer['apphhzp'/2, l='ServerLevel[world]', x=9.65, y=91.00, z=-10.72]]
+	Chunk stats: 2401
+	Level dimension: minecraft:overworld
+	Level spawn location: World: (0,90,0), Section: (at 0,10,0 in 0,5,0; chunk contains blocks 0,-64,0 to 15,319,15), Region: (0,0; contains chunks 0,0 to 31,31, blocks 0,-64,0 to 511,319,511)
+	Level time: 5134 game time, 5134 day time
+	Level name: world
+	Level game mode: Game mode: creative (ID 1). Hardcore: false. Cheats: false
+	Level weather: Rain time: 171380 (now: false), thunder time: 78593 (now: false)
+	Known server brands: forge
+	Removed feature flags: 
+	Level was modded: true
+	Level storage version: 0x04ABD - Anvil
+Stacktrace:
+	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:893) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.dedicated.DedicatedServer.tickChildren(DedicatedServer.java:283) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:814) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:661) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:251) ~[forge-1.20.1-47.2.0_mapped_official_1.20.1.jar%23198!/:?] {re:classloading,pl:EntityEraser:B,pl:accesstransformer:B}
+	at java.lang.Thread.run(Thread.java:842) ~[?:?] {}
+
+
+-- System Details --
+Details:
+	Minecraft Version: 1.20.1
+	Minecraft Version ID: 1.20.1
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 17.0.10, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode, sharing), Oracle Corporation
+	Memory: 1756084400 bytes (1674 MiB) / 2789212160 bytes (2660 MiB) up to 8527020032 bytes (8132 MiB)
+	CPUs: 12
+	Processor Vendor: GenuineIntel
+	Processor Name: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+	Identifier: Intel64 Family 6 Model 165 Stepping 2
+	Microarchitecture: unknown
+	Frequency (GHz): 2.59
+	Number of physical packages: 1
+	Number of physical CPUs: 6
+	Number of logical CPUs: 12
+	Graphics card #0 name: Intel(R) UHD Graphics
+	Graphics card #0 vendor: Intel Corporation (0x8086)
+	Graphics card #0 VRAM (MB): 1024.00
+	Graphics card #0 deviceId: 0x9bc4
+	Graphics card #0 versionInfo: DriverVersion=31.0.101.2134
+	Graphics card #1 name: NVIDIA Quadro T2000
+	Graphics card #1 vendor: NVIDIA (0x10de)
+	Graphics card #1 VRAM (MB): 4095.00
+	Graphics card #1 deviceId: 0x1fb8
+	Graphics card #1 versionInfo: DriverVersion=31.0.15.3878
+	Memory slot #0 capacity (MB): 8192.00
+	Memory slot #0 clockSpeed (GHz): 2.67
+	Memory slot #0 type: DDR4
+	Memory slot #1 capacity (MB): 8192.00
+	Memory slot #1 clockSpeed (GHz): 2.67
+	Memory slot #1 type: DDR4
+	Memory slot #2 capacity (MB): 8192.00
+	Memory slot #2 clockSpeed (GHz): 2.67
+	Memory slot #2 type: DDR4
+	Memory slot #3 capacity (MB): 8192.00
+	Memory slot #3 clockSpeed (GHz): 3.20
+	Memory slot #3 type: DDR4
+	Virtual memory max (MB): 37383.33
+	Virtual memory used (MB): 28243.18
+	Swap memory total (MB): 4864.00
+	Swap memory used (MB): 129.13
+	JVM Flags: 0 total; 
+	Server Running: true
+	Player Count: 1 / 20; [ServerPlayer['apphhzp'/2, l='ServerLevel[world]', x=9.65, y=91.00, z=-10.72]]
+	Data Packs: vanilla, mod:entityeraser, mod:forge, mod:apphhzp_lib
+	Enabled Feature Flags: minecraft:vanilla
+	World Generation: Stable
+	Is Modded: Definitely; Server brand changed to 'forge'
+	Type: Dedicated Server (map_server.txt)
+	ModLauncher: 10.0.9+10.0.9+main.dcd20f30
+	ModLauncher launch target: forgeserveruserdev
+	ModLauncher naming: mcp
+	ModLauncher services: 
+		mixin-0.8.5.jar mixin PLUGINSERVICE 
+		eventbus-6.0.5.jar eventbus PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar slf4jfixer PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar object_holder_definalize PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar runtime_enum_extender PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar capability_token_subclass PLUGINSERVICE 
+		accesstransformers-8.0.4.jar accesstransformer PLUGINSERVICE 
+		fmlloader-1.20.1-47.2.0.jar runtimedistcleaner PLUGINSERVICE 
+		modlauncher-10.0.9.jar mixin TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar  EntityEraser TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar fml TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar apphhzpLIB TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		minecraft@1.0
+		lowcodefml@null
+		javafml@null
+	Mod List: 
+		forge-1.20.1-47.2.0_mapped_official_1.20.1.jar    |Minecraft                     |minecraft                     |1.20.1              |DONE      |Manifest: a1:d4:5e:04:4f:d3:d6:e0:7b:37:97:cf:77:b0:de:ad:4a:47:ce:8c:96:49:5f:0a:cf:8c:ae:b2:6d:4b:8a:3f
+		modid-0.0.9.1.jar                                 |entityeraser                  |entityeraser                  |0.0.9.1             |DONE      |Manifest: NOSIGNATURE
+		                                                  |Forge                         |forge                         |47.2.0              |DONE      |Manifest: NOSIGNATURE
+		apphhzpLIB-1.0.8.1.jar                            |apphhzpLIB                    |apphhzp_lib                   |1.0.8.1             |DONE      |Manifest: NOSIGNATURE
+	Crash Report UUID: 762bfd69-480d-45b9-9e62-1655c0ab49d8
+	FML: 47.2
+	Forge: net.minecraftforge:47.2.0

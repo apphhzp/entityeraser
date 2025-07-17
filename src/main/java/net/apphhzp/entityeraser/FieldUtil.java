@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.Tesselator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.apphhzp.entityeraser.init.EntityeraserModItems;
-import net.apphhzp.entityeraser.util.DeadBufferBuilder;
+import net.apphhzp.entityeraser.util.EntityEraserBufferBuilder;
+import net.apphhzp.entityeraser.util.EntityEraserEventBus;
 import net.apphhzp.entityeraser.util.EntityUtil;
 import net.apphhzp.entityeraser.util.ProtectedNonNullList;
 import net.minecraft.client.Minecraft;
@@ -23,20 +23,56 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.loading.FMLLoader;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.JNI;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Stack;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 public final class FieldUtil {
+    static {
+//        if(ClassHelperSpecial.isHotspotJVM){
+//            ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.util.EntityUtil$DisableRemoveSet",FieldUtil.class,true,null);
+//            ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.util.EntityUtil",FieldUtil.class,true,null);
+//            ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.event.Events",FieldUtil.class,true,null);
+//            if (FMLEnvironment.dist.isClient()){
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.PoseStackHelper",FieldUtil.class,true,null);
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.MinecraftRenderers",FieldUtil.class,true,null);
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.util.DeadBufferBuilder",FieldUtil.class,true,null);
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers",FieldUtil.class,true,null);
+//            }
+//        }else {
+//            try {
+//                defineClass("net.apphhzp.entityeraser.util.EntityUtil$DisableRemoveSet");
+//                defineClass("net.apphhzp.entityeraser.util.EntityUtil");
+//                defineClass("net.apphhzp.entityeraser.event.Events");
+//                defineClass("net.apphhzp.entityeraser.util.EntityEraserEventBus");
+//                if (FMLEnvironment.dist.isClient()) {
+//                    defineClass("net.apphhzp.entityeraser.shitmountain.PoseStackHelper");
+//                    defineClass("net.apphhzp.entityeraser.shitmountain.MinecraftRenderers");
+//                    defineClass("net.apphhzp.entityeraser.util.DeadBufferBuilder");
+//                    defineClass("net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers");
+//                }
+//            }catch (Throwable t){
+//                throw new RuntimeException(t);
+//            }
+//        }
+    }
+
     public static IEventBus getEventBus(){
         if (MinecraftForge.EVENT_BUS==null){
             return null;
         }
-        EntityUtil.setEventBus();
+        if (MinecraftForge.EVENT_BUS instanceof EventBus bus) {
+            return EntityEraserEventBus.getOrCreate(bus);
+        }
         return MinecraftForge.EVENT_BUS;
     }
 
@@ -68,36 +104,28 @@ public final class FieldUtil {
     }
 
     public static <T extends EntityAccess> Int2ObjectMap<T> getById(EntityLookup<T> lookup){
-        for (ObjectIterator<T> iterator = lookup.byId.values().iterator(); iterator.hasNext();) {
-            EntityAccess access = iterator.next();
+        lookup.byId.values().removeIf((access)->{
             if (access instanceof Entity entity) {
                 if (EntityUtil.shouldDie(entity)) {
-                    iterator.remove();
-                    EntityUtil.killEntity(entity);
+                    return true;
                 }
-                if (EntityUtil.disableSpawn&&!(entity instanceof Player)){
-                    iterator.remove();
-                    EntityUtil.killEntity(entity);
-                }
+                return EntityUtil.disableSpawn && !(entity instanceof Player);
             }
-        }
+            return false;
+        });
         return lookup.byId;
     }
 
     public static <T extends EntityAccess> Map<UUID,T> getByUuid(EntityLookup<T> lookup){
-        for (Iterator<T> iterator = lookup.byUuid.values().iterator(); iterator.hasNext(); ) {
-            EntityAccess access = iterator.next();
+        lookup.byUuid.values().removeIf((access)->{
             if (access instanceof Entity entity){
                 if (EntityUtil.shouldDie(entity)) {
-                    iterator.remove();
-                    EntityUtil.killEntity(entity);
+                    return true;
                 }
-                if (EntityUtil.disableSpawn&&!(entity instanceof Player)){
-                    iterator.remove();
-                    EntityUtil.killEntity(entity);
-                }
+                return EntityUtil.disableSpawn && !(entity instanceof Player);
             }
-        }
+            return false;
+        });
         return lookup.byUuid;
     }
 
@@ -123,59 +151,65 @@ public final class FieldUtil {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static final Stack<Screen> emptyStack= new Stack<>() {
-        @Override
-        public Screen push(Screen item) {
-            return item;
-        }
+    private static Stack<Screen> emptyStack;
 
-        @Override
-        public synchronized Screen pop() {
-            return null;
-        }
+    static {
+        if (FMLLoader.getDist().isClient()){
+            emptyStack = new Stack<>() {
+                @Override
+                public Screen push(Screen item) {
+                    return item;
+                }
 
-        @Override
-        public synchronized Screen peek() {
-            return null;
-        }
+                @Override
+                public synchronized Screen pop() {
+                    return null;
+                }
 
-        @Override
-        public boolean empty() {
-            return true;
-        }
+                @Override
+                public synchronized Screen peek() {
+                    return null;
+                }
 
-        @Override
-        public synchronized void addElement(Screen obj) {
-        }
+                @Override
+                public boolean empty() {
+                    return true;
+                }
 
-        @Override
-        public synchronized void setElementAt(Screen obj, int index) {
-        }
+                @Override
+                public synchronized void addElement(Screen obj) {
+                }
 
-        @Override
-        public synchronized Screen set(int index, Screen element) {
-            return element;
-        }
+                @Override
+                public synchronized void setElementAt(Screen obj, int index) {
+                }
 
-        @Override
-        public synchronized boolean add(Screen screen) {
-            return false;
-        }
+                @Override
+                public synchronized Screen set(int index, Screen element) {
+                    return element;
+                }
 
-        @Override
-        public void add(int index, Screen element) {
-        }
+                @Override
+                public synchronized boolean add(Screen screen) {
+                    return false;
+                }
 
-        @Override
-        public boolean addAll(Collection<? extends Screen> c) {
-            return false;
-        }
+                @Override
+                public void add(int index, Screen element) {
+                }
 
-        @Override
-        public synchronized boolean addAll(int index, Collection<? extends Screen> c) {
-            return false;
+                @Override
+                public boolean addAll(Collection<? extends Screen> c) {
+                    return false;
+                }
+
+                @Override
+                public synchronized boolean addAll(int index, Collection<? extends Screen> c) {
+                    return false;
+                }
+            };
         }
-    };
+    }
 
     @OnlyIn(Dist.CLIENT)
     public static Stack<Screen> getGuiLayers(){
@@ -189,8 +223,8 @@ public final class FieldUtil {
 
     @OnlyIn(Dist.CLIENT)
     public static BufferBuilder getBuilder(Tesselator tesselator){
-        if (EntityUtil.shouldDie(Minecraft.getInstance().player)){
-            return DeadBufferBuilder.getInstance();
+        if (EntityEraserBufferBuilder.shouldReplace()){
+            return EntityEraserBufferBuilder.getInstance();
         }
         return tesselator.builder;
     }

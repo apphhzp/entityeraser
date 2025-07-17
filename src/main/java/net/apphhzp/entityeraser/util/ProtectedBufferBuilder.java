@@ -6,7 +6,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import net.apphhzp.entityeraser.shitmountain.DeathRenderer;
@@ -29,27 +28,16 @@ import org.lwjgl.system.JNI;
 
 import static net.apphhzp.entityeraser.shitmountain.MinecraftRenderers.*;
 
-public class ProtectedBufferBuilder extends BufferBuilder {
-    private static ProtectedBufferBuilder INSTANCE;
+public class ProtectedBufferBuilder {
     private static RenderTarget workingTarget;
     private static RenderTarget normalTarget;
 
     private static int framebufferWidth;
 
     private static int framebufferHeight;
-    public ProtectedBufferBuilder(int p_85664_) {
-        super(p_85664_);
-    }
 
     private static RenderTarget currentTarget() {
         return normalTarget;
-    }
-
-    public static ProtectedBufferBuilder getInstance(){
-        if (INSTANCE ==null){
-            INSTANCE =new ProtectedBufferBuilder(2097152);
-        }
-        return INSTANCE;
     }
 
     private static void recreate(){
@@ -76,13 +64,6 @@ public class ProtectedBufferBuilder extends BufferBuilder {
         GL30.glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 0, framebufferWidth, framebufferHeight, GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
     }
 
-    @Override
-    public void clear() {
-        super.clear();
-        if (EntityUtil.disableGUI&&"flipFrame".equals(new Throwable().getStackTrace()[1].getMethodName())) {
-            render();
-        }
-    }
 
     public static void render(){
         recreate();
@@ -112,7 +93,7 @@ public class ProtectedBufferBuilder extends BufferBuilder {
             int i = (int)(renderer.minecraft.mouseHandler.xpos() * (double)renderer.minecraft.getWindow().getGuiScaledWidth() / (double)renderer.minecraft.getWindow().getScreenWidth());
             int j = (int)(renderer.minecraft.mouseHandler.ypos() * (double)renderer.minecraft.getWindow().getGuiScaledHeight() / (double)renderer.minecraft.getWindow().getScreenHeight());
             RenderSystem.viewport(0, 0, renderer.minecraft.getWindow().getWidth(), renderer.minecraft.getWindow().getHeight());
-            if (p_109096_ && renderer.minecraft.level != null) {
+            if (p_109096_ && renderer.minecraft.level != null&&renderer.minecraft.player!=null&&renderer.minecraft.gameMode!=null){
                 renderer.minecraft.getProfiler().push("level");
                 renderLevel(renderer,p_109094_, p_109095_, new PoseStack());
                 tryTakeScreenshotIfNeeded(renderer);

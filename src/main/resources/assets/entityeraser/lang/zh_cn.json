@@ -9,6 +9,7 @@
   "item.entityeraser.destroy_renderer": "摧毁渲染",
   "item.entityeraser.test_item": "测试物品",
   "item.entityeraser.all_return": "all return切换器",
+  "item.entityeraser.time_stop": "时间停止",
   "item.entityeraser.gdi_kill_self": "GDI级一键趋势",
   "item.entityeraser.entity_eraser.tooltip1": "强力的实体抹除器",
   "item.entityeraser.entity_eraser.tooltip2": "PS:对纯渲染实体无效",
@@ -24,5 +25,6 @@
   "DisableGUIMode.change": "禁GUI: %s",
   "DisableEntityCallMethodsMode.change": "禁止攻击时调用实体自身方法: %s",
   "ProtectInventoryMode.change": "高级防缴械: %s",
-  "AllReturnMode.change": "方法全return: %s"
+  "AllReturnMode.change": "方法全return: %s",
+  "TimeStop.change": "时停: %s"
 }

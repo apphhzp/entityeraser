@@ -1,6 +1,6 @@
 package net.apphhzp.entityeraser.shitmountain;
 
-import apphhzp.lib.ClassHelper;
+import apphhzp.lib.ClassHelperSpecial;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.vertex.*;
@@ -358,13 +358,13 @@ public final class BufferHelper {
     public static ByteBuffer vertexBuffer(BufferBuilder.RenderedBuffer buffer) {
         int i = buffer.pointer + buffer.drawState.vertexBufferStart();
         int j = buffer.pointer + buffer.drawState.vertexBufferEnd();
-        return bufferSlice(ClassHelper.getOuterInstance(buffer, BufferBuilder.class),i, j);
+        return bufferSlice(ClassHelperSpecial.getOuterInstance(buffer, BufferBuilder.class),i, j);
     }
 
     public static ByteBuffer indexBuffer(BufferBuilder.RenderedBuffer buffer) {
         int i = buffer.pointer + buffer.drawState.indexBufferStart();
         int j = buffer.pointer + buffer.drawState.indexBufferEnd();
-        return bufferSlice(ClassHelper.getOuterInstance(buffer, BufferBuilder.class),i, j);
+        return bufferSlice(ClassHelperSpecial.getOuterInstance(buffer, BufferBuilder.class),i, j);
     }
 
 
@@ -376,7 +376,7 @@ public final class BufferHelper {
         if (buffer.released) {
             throw new IllegalStateException("Buffer has already been released!");
         } else {
-            releaseRenderedBuffer(ClassHelper.getOuterInstance(buffer, BufferBuilder.class));
+            releaseRenderedBuffer(ClassHelperSpecial.getOuterInstance(buffer, BufferBuilder.class));
             buffer.released = true;
         }
     }

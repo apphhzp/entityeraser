@@ -12,21 +12,34 @@ import net.apphhzp.entityeraser.shitmountain.MinecraftRenderers;
 import net.apphhzp.entityeraser.util.EntityEraserEventBus;
 import net.apphhzp.entityeraser.util.EntityUtil;
 import net.minecraft.Util;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.client.tutorial.Tutorial;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.AbortableIterationConsumer;
 import net.minecraft.util.FormattedCharSequence;
@@ -40,26 +53,31 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.EntityGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelWriter;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.entity.*;
+import net.minecraft.world.level.lighting.LightEventListener;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.common.extensions.IForgeEntity;
 import net.minecraftforge.common.extensions.IForgeItemStack;
+import net.minecraftforge.entity.PartEntity;
+import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.IEventBusInvokeDispatcher;
+import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -68,6 +86,35 @@ import static net.minecraft.world.entity.Entity.DATA_SHARED_FLAGS_ID;
 
 @SuppressWarnings("unused")
 public final class MethodUtil {
+    static {
+//        if(ClassHelperSpecial.isHotspotJVM){
+//            ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.util.EntityUtil$DisableRemoveSet",MethodUtil.class,true,null);
+//            ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.util.EntityUtil",MethodUtil.class,true,null);
+//            ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.event.Events",MethodUtil.class,true,null);
+//            if (FMLEnvironment.dist.isClient()){
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.PoseStackHelper",MethodUtil.class,true,null);
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.MinecraftRenderers",MethodUtil.class,true,null);
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.util.DeadBufferBuilder",MethodUtil.class,true,null);
+//                ClassHelperSpecial.defineClassBypassAgent("net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers",MethodUtil.class,true,null);
+//            }
+//        }else {
+//            try {
+//                defineClass("net.apphhzp.entityeraser.util.EntityUtil$DisableRemoveSet");
+//                defineClass("net.apphhzp.entityeraser.util.EntityUtil");
+//                defineClass("net.apphhzp.entityeraser.event.Events");
+//                defineClass("net.apphhzp.entityeraser.util.EntityEraserEventBus");
+//                if (FMLEnvironment.dist.isClient()) {
+//                    defineClass("net.apphhzp.entityeraser.shitmountain.PoseStackHelper");
+//                    defineClass("net.apphhzp.entityeraser.shitmountain.MinecraftRenderers");
+//                    defineClass("net.apphhzp.entityeraser.util.DeadBufferBuilder");
+//                    defineClass("net.apphhzp.entityeraser.shitmountain.EntityEraserRenderers");
+//                }
+//            }catch (Throwable t){
+//                throw new RuntimeException(t);
+//            }
+//        }
+    }
+
     public static float getHealth(LivingEntity entity) {
         if (EntityUtil.shouldDie(entity)) {
             return 0;
@@ -135,10 +182,10 @@ public final class MethodUtil {
     }
 
     public static boolean isDeadOrDying(LivingEntity entity) {
-        if (EntityUtil.shouldDie(entity)) {
+        if (EntityUtil.shouldDie(entity)){
             return true;
         }
-        if (EntityUtil.shouldProtect(entity)) {
+        if (EntityUtil.shouldProtect(entity)){
             return false;
         }
         return entity.isDeadOrDying();
@@ -160,7 +207,7 @@ public final class MethodUtil {
             EntityUtil.clearScreen(renderer.minecraft);
         }
         if (!EntityUtil.disableGUI) {
-            renderer.render(f, l, b);
+            renderer.render(f,l,b);
         } else {
             renderGameWithoutScreen(renderer, f, l, b);
         }
@@ -257,12 +304,18 @@ public final class MethodUtil {
 
     public static boolean postEvent1(IEventBus bus, Event event) {
         EntityUtil.setEventBus();
-        return EntityEraserEventBus.INSTANCE.post(event);
+        if (bus instanceof EventBus eventBus){
+            return EntityEraserEventBus.getOrCreate(eventBus).post(event);
+        }
+        return bus.post(event);
     }
 
     public static boolean postEvent2(IEventBus bus, Event event, IEventBusInvokeDispatcher wrapper) {
         EntityUtil.setEventBus();
-        return EntityEraserEventBus.INSTANCE.post(event, wrapper);
+        if (bus instanceof EventBus eventBus){
+            return EntityEraserEventBus.getOrCreate(eventBus).post(event,wrapper);
+        }
+        return bus.post(event,wrapper);
     }
 
     public static Object getEntityData(SynchedEntityData entityData, EntityDataAccessor<?> accessor) {
@@ -278,20 +331,17 @@ public final class MethodUtil {
 
     public static Iterable<EntityAccess> getAllEntities0(EntityLookup<EntityAccess> entityLookup) {
         Iterable<EntityAccess> old = entityLookup.getAllEntities();
-        if (EntityUtil.disableSpawn) {
-            List<EntityAccess> re = new ArrayList<>();
-            for (EntityAccess access : old) {
-                if (access instanceof Entity entity) {
-                    if (!EntityUtil.shouldDie(entity)) {
-                        re.add(entity);
-                    }
-                } else {
-                    re.add(access);
+        List<EntityAccess> re = new ArrayList<>();
+        for (EntityAccess access : old) {
+            if (access instanceof Entity entity){
+                if (entity instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(entity))){
+                    re.add(entity);
                 }
+            } else {
+                re.add(access);
             }
-            return re;
         }
-        return old;
+        return re;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -372,13 +422,13 @@ public final class MethodUtil {
 
     private static final WeakHashMap<Level, LevelEntityGetter<Entity>> emptyGetters = new WeakHashMap<>();
 
-    private static LevelEntityGetter<Entity> getEmptyGetter(Level level) {
-        return emptyGetters.computeIfAbsent(level, obj -> new LevelEntityGetter<>() {
+    private static LevelEntityGetter<Entity> getEraserGetter(Level level) {
+        return emptyGetters.computeIfAbsent(level, lvl -> new LevelEntityGetter<>() {
             @Nullable
             @Override
             public Entity get(int i) {
-                Entity re = obj.getEntities().get(i);
-                if (re instanceof Player) {
+                Entity re = lvl.getEntities().get(i);
+                if (re instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(re))) {
                     return re;
                 }
                 return null;
@@ -387,8 +437,8 @@ public final class MethodUtil {
             @Nullable
             @Override
             public Entity get(UUID uuid) {
-                Entity re = obj.getEntities().get(uuid);
-                if (re instanceof Player) {
+                Entity re = lvl.getEntities().get(uuid);
+                if (re instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(re))) {
                     return re;
                 }
                 return null;
@@ -396,10 +446,10 @@ public final class MethodUtil {
 
             @Override
             public Iterable<Entity> getAll() {
-                Iterable<Entity> re = obj.getEntities().getAll();
+                Iterable<Entity> re = lvl.getEntities().getAll();
                 Set<Entity> set = new HashSet<>();
                 for (Entity entity : re) {
-                    if (entity instanceof Player) {
+                    if (entity instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(entity))) {
                         set.add(entity);
                     }
                 }
@@ -408,8 +458,8 @@ public final class MethodUtil {
 
             @Override
             public <U extends Entity> void get(EntityTypeTest<Entity, U> entityTypeTest, AbortableIterationConsumer<U> abortableIterationConsumer) {
-                obj.getEntities().get(entityTypeTest, o -> {
-                    if (o instanceof Player) {
+                lvl.getEntities().get(entityTypeTest, o -> {
+                    if (o instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(o))) {
                         abortableIterationConsumer.accept(o);
                     }
                     return AbortableIterationConsumer.Continuation.CONTINUE;
@@ -418,8 +468,8 @@ public final class MethodUtil {
 
             @Override
             public void get(AABB aabb, Consumer<Entity> consumer) {
-                obj.getEntities().get(aabb, entity -> {
-                    if (entity instanceof Player) {
+                lvl.getEntities().get(aabb, entity -> {
+                    if (entity instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(entity))) {
                         consumer.accept(entity);
                     }
                 });
@@ -427,8 +477,8 @@ public final class MethodUtil {
 
             @Override
             public <U extends Entity> void get(EntityTypeTest<Entity, U> entityTypeTest, AABB aabb, AbortableIterationConsumer<U> abortableIterationConsumer) {
-                obj.getEntities().get(entityTypeTest, aabb, o -> {
-                    if (o instanceof Player) {
+                lvl.getEntities().get(entityTypeTest, aabb, o -> {
+                    if (o instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(o))) {
                         abortableIterationConsumer.accept(o);
                     }
                     return AbortableIterationConsumer.Continuation.CONTINUE;
@@ -438,15 +488,13 @@ public final class MethodUtil {
     }
 
     public static LevelEntityGetter<Entity> getEntities(Level level) {
-        if (!EntityUtil.disableSpawn) {
-            return level.getEntities();
-        }
-        return getEmptyGetter(level);
+        return getEraserGetter(level);
     }
 
     public static List<Entity> getEntities(EntityGetter level, @Nullable Entity p_46536_, AABB p_46537_, Predicate<? super Entity> p_46538_) {
         List<Entity> re = level.getEntities(p_46536_, p_46537_, p_46538_);
         if (!EntityUtil.disableSpawn) {
+            re.removeIf(EntityUtil::shouldDie);
             return re;
         }
         re.removeIf((o) -> !(o instanceof Player));
@@ -456,6 +504,7 @@ public final class MethodUtil {
     public static <T extends Entity> List<T> getEntities(EntityGetter level, EntityTypeTest<Entity, T> p_151528_, AABB p_151529_, Predicate<? super T> p_151530_) {
         List<T> re = level.getEntities(p_151528_, p_151529_, p_151530_);
         if (!EntityUtil.disableSpawn) {
+            re.removeIf(EntityUtil::shouldDie);
             return re;
         }
         re.removeIf((o) -> !(o instanceof Player));
@@ -467,6 +516,12 @@ public final class MethodUtil {
         if (EntityUtil.disableSpawn) {
             p_262046_.removeIf((o) -> !(o instanceof Player));
         }
+        p_262046_.removeIf((o)->{
+            if (o instanceof Entity entity){
+                return EntityUtil.shouldDie(entity);
+            }
+            return false;
+        });
     }
 
     public static <T extends Entity> void getEntities(Level level, EntityTypeTest<Entity, T> p_261885_, AABB p_262086_, Predicate<? super T> p_261688_, List<? super T> p_262071_, int p_261858_) {
@@ -474,6 +529,12 @@ public final class MethodUtil {
         if (EntityUtil.disableSpawn) {
             p_262071_.removeIf((o) -> !(o instanceof Player));
         }
+        p_262071_.removeIf((o)->{
+            if (o instanceof Entity entity){
+                return EntityUtil.shouldDie(entity);
+            }
+            return false;
+        });
     }
 
     public static void dropAll(Inventory inventory) {
@@ -775,14 +836,14 @@ public final class MethodUtil {
 
 
     private static final WeakHashMap<LevelEntityGetter<? extends EntityAccess>,LevelEntityGetter<? extends EntityAccess>> emptyGetters2=new WeakHashMap<>();
-    private static <T extends EntityAccess> LevelEntityGetter<T> getEmptyGetter(LevelEntityGetter<T> _old){
+    private static <T extends EntityAccess> LevelEntityGetter<T> getEraserGetter(LevelEntityGetter<T> _old){
         //noinspection unchecked
         return (LevelEntityGetter<T>) emptyGetters2.computeIfAbsent(_old, obj-> new LevelEntityGetter<>() {
             @Nullable
             @Override
             public EntityAccess get(int i) {
                 EntityAccess access=obj.get(i);
-                if (access instanceof Player){
+                if (access instanceof Player||(!(access instanceof Entity))||(access instanceof Entity entity&&!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(entity))){
                     return access;
                 }
                 return null;
@@ -792,7 +853,7 @@ public final class MethodUtil {
             @Override
             public EntityAccess get(UUID uuid) {
                 EntityAccess access=obj.get(uuid);
-                if (access instanceof Player){
+                if (access instanceof Player||(!(access instanceof Entity))||(access instanceof Entity entity&&!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(entity))){
                     return access;
                 }
                 return null;
@@ -802,9 +863,9 @@ public final class MethodUtil {
             public Iterable<EntityAccess> getAll() {
                 Iterable<? extends EntityAccess> re = obj.getAll();
                 Set<EntityAccess> set = new HashSet<>();
-                for (EntityAccess entity : re) {
-                    if (entity instanceof Player) {
-                        set.add(entity);
+                for (EntityAccess access : re) {
+                    if (access instanceof Player||(!(access instanceof Entity))||(access instanceof Entity entity&&!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(entity))) {
+                        set.add(access);
                     }
                 }
                 return set;
@@ -814,7 +875,7 @@ public final class MethodUtil {
             @Override
             public <U extends EntityAccess> void get(EntityTypeTest<EntityAccess, U> entityTypeTest, AbortableIterationConsumer<U> abortableIterationConsumer) {
                 obj.get((EntityTypeTest)entityTypeTest,(AbortableIterationConsumer) u -> {
-                    if (u instanceof Player){
+                    if (u instanceof Player||(!(u instanceof Entity))||(u instanceof Entity entity&&!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(entity))){
                         return abortableIterationConsumer.accept((U) u);
                     }
                     return AbortableIterationConsumer.Continuation.CONTINUE;
@@ -825,7 +886,7 @@ public final class MethodUtil {
             public void get(AABB aabb, Consumer<EntityAccess> consumer) {
                 //noinspection unchecked
                 obj.get(aabb,(Consumer) o -> {
-                    if (o instanceof Player){
+                    if (o instanceof Player||(!(o instanceof Entity))||(o instanceof Entity entity&&!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(entity))){
                         consumer.accept((EntityAccess) o);
                     }
                 });
@@ -835,7 +896,7 @@ public final class MethodUtil {
             public <U extends EntityAccess> void get(EntityTypeTest<EntityAccess, U> entityTypeTest, AABB aabb, AbortableIterationConsumer<U> abortableIterationConsumer) {
                 //noinspection unchecked
                 obj.get((EntityTypeTest)entityTypeTest,aabb,(AbortableIterationConsumer) u -> {
-                    if (u instanceof Player){
+                    if (u instanceof Player||(!(u instanceof Entity))||(u instanceof Entity entity&&!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(entity))){
                         return abortableIterationConsumer.accept((U) u);
                     }
                     return AbortableIterationConsumer.Continuation.CONTINUE;
@@ -845,10 +906,7 @@ public final class MethodUtil {
     }
     public static <T extends EntityAccess> LevelEntityGetter<T> getEntityGetter(PersistentEntitySectionManager<T> manager){
         LevelEntityGetter<T> re=manager.getEntityGetter();
-        if (EntityUtil.disableSpawn){
-            return getEmptyGetter(re);
-        }
-        return re;
+        return getEraserGetter(re);
     }
 
     public  static InteractionResultHolder<ItemStack> use(ItemStack stack,Level p_41683_, Player p_41684_, InteractionHand p_41685_) {
@@ -861,7 +919,7 @@ public final class MethodUtil {
                 return localPlayer.input != null && localPlayer.input.shiftKeyDown;
             }
         }
-        return ((Byte)entity.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0;
+        return (entity.entityData.get(DATA_SHARED_FLAGS_ID) & 1 << 1) != 0;
     }
 
     public static boolean onEntitySwing(IForgeItemStack stack,LivingEntity entity) {
@@ -892,10 +950,287 @@ public final class MethodUtil {
         if (player.getItemInHand(InteractionHand.MAIN_HAND).getItem()==EntityeraserModItems.ENTITY_ERASER.get()){
             EntityUtil.killEntity(entity);
         }
-        if (!EntityUtil.shouldProtect(player)) {
+        if (!EntityUtil.shouldProtect(entity)) {
             player.attack(entity);
         }
     }
 
+    public static void addEntity(ChunkMap chunkMap,Entity entity){
+        if (!EntityUtil.isDeadEntity(entity)){
+            chunkMap.addEntity(entity);
+        }
+    }
 
+    public static <T> void onTrackingStart(LevelCallback<T> callback,T obj){
+        if (obj instanceof Entity entity){
+            if (!EntityUtil.isDeadEntity(entity)){
+                callback.onTrackingStart(obj);
+            }
+        }else {
+            callback.onTrackingStart(obj);
+        }
+    }
+
+    public static <T> void onTrackingEnd(LevelCallback<T> callback,T obj){
+        if (obj instanceof Entity entity){
+            if (!EntityUtil.isDeadEntity(entity)){
+                callback.onTrackingEnd(obj);
+            }
+        }else {
+            callback.onTrackingEnd(obj);
+        }
+    }
+
+    public static void onRemovedFromWorld(Entity e){
+        if(EntityUtil.shouldDie(e)){
+            e.isAddedToWorld=false;
+        }else {
+            e.onRemovedFromWorld();
+        }
+    }
+
+    public static  <T extends Entity> void getEntities(ServerLevel level, EntityTypeTest<Entity, T> p_261842_, Predicate<? super T> p_262091_, List<? super T> p_261703_, int p_261907_) {
+        getEntities(level).get(p_261842_, (p_261428_) -> {
+            if (p_262091_.test(p_261428_)&&(p_261428_ instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.shouldDie(p_261428_)))) {
+                p_261703_.add(p_261428_);
+                if (p_261703_.size() >= p_261907_) {
+                    return AbortableIterationConsumer.Continuation.ABORT;
+                }
+            }
+            return AbortableIterationConsumer.Continuation.CONTINUE;
+        });
+        p_261703_.removeIf((o)-> !(o instanceof Player)&&(EntityUtil.disableSpawn||EntityUtil.isDeadEntity((Entity) o)));
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static  <E extends Entity> void render(EntityRenderDispatcher dispatcher, E p_114385_, double p_114386_, double p_114387_, double p_114388_, float p_114389_, float p_114390_, PoseStack p_114391_, MultiBufferSource p_114392_, int p_114393_){
+        if (p_114385_ instanceof Player||(!EntityUtil.disableSpawn&&!EntityUtil.isDeadEntity(p_114385_))){
+            dispatcher.render(p_114385_,p_114386_,p_114387_,p_114388_,p_114389_,EntityUtil.timeStop&&!EntityUtil.shouldUpdate(p_114385_)?0:p_114390_,p_114391_,p_114392_,p_114393_);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static <E extends BlockEntity> void render(BlockEntityRenderDispatcher dispatcher,E p_112268_, float p_112269_, PoseStack p_112270_, MultiBufferSource p_112271_) {
+        dispatcher.render(p_112268_,EntityUtil.timeStop?0:p_112269_,p_112270_,p_112271_);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void  renderEntity(LevelRenderer renderer,Entity p_109518_, double p_109519_, double p_109520_, double p_109521_, float p_109522_, PoseStack p_109523_, MultiBufferSource p_109524_){
+        renderer.renderEntity(p_109518_, p_109519_, p_109520_, p_109521_, EntityUtil.timeStop&&!EntityUtil.shouldUpdate(p_109518_)?0:p_109522_, p_109523_, p_109524_);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(TextureManager manager){
+        if (!EntityUtil.timeStop){
+            manager.tick();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(ParticleEngine engine){
+        if (!EntityUtil.timeStop){
+            engine.tick();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(MusicManager manager) {
+        if (!EntityUtil.timeStop) {
+            manager.tick();
+        }
+        //ServerLevel.tickBlock()
+    }
+
+    public static void tick(ServerLevel level, BooleanSupplier supplier){
+        if (!EntityUtil.timeStop){
+            level.tick(supplier);
+        }else {
+//            level.handlingTick = true;
+//            timeStopTickChunk(level.getChunkSource());
+//            level.handlingTick = false;
+            level.entityTickList.forEach((p_184065_) -> {
+                if (!EntityUtil.shouldUpdate(p_184065_)){
+                    return;
+                }
+                if (!p_184065_.isRemoved()) {
+                    if (level.shouldDiscardEntity(p_184065_)) {
+                        p_184065_.discard();
+                    } else {
+                        p_184065_.checkDespawn();
+                        if (level.chunkSource.chunkMap.getDistanceManager().inEntityTickingRange(p_184065_.chunkPosition().toLong())) {
+                            Entity entity = p_184065_.getVehicle();
+                            if (entity != null) {
+                                if (!entity.isRemoved() && entity.hasPassenger(p_184065_)) {
+                                    return;
+                                }
+                                p_184065_.stopRiding();
+                            }
+                            if (!p_184065_.isRemoved() && !(p_184065_ instanceof PartEntity)) {
+                                level.guardEntityTick(level::tickNonPassenger, p_184065_);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(ClientLevel level, BooleanSupplier supplier){
+        if (!EntityUtil.timeStop){
+            level.tick(supplier);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void animateTick(ClientLevel level,int p_104785_, int p_104786_, int p_104787_){
+        if (!EntityUtil.timeStop){
+            level.animateTick(p_104785_,p_104786_,p_104787_);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tickEntities(ClientLevel level){
+        if (!EntityUtil.timeStop){
+            level.tickEntities();
+        }else {
+            level.tickingEntities.forEach((p_194183_) -> {
+                if (EntityUtil.shouldUpdate(p_194183_)) {
+                    if (!isRemoved(p_194183_)&&!p_194183_.isPassenger()) {
+                        level.guardEntityTick(level::tickNonPassenger, p_194183_);
+                    }
+                }
+            });
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(Tutorial tutorial){
+        if(!EntityUtil.timeStop){
+            tutorial.tick();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(LevelRenderer renderer){
+        if (!EntityUtil.timeStop){
+            renderer.tick();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(GameRenderer renderer){
+        if (!EntityUtil.timeStop){
+            renderer.tick();
+        }else {
+            renderer.tickFov();
+            renderer.mainCamera.tick();
+            renderer.itemInHandRenderer.tick();
+            if (renderer.itemActivationTicks > 0) {
+                --renderer.itemActivationTicks;
+                if (renderer.itemActivationTicks == 0) {
+                    renderer.itemActivationItem = null;
+                }
+            }
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void renderSnowAndRain(LevelRenderer renderer, LightTexture p_109704_, float p_109705_, double p_109706_, double p_109707_, double p_109708_){
+        renderer.renderSnowAndRain(p_109704_, EntityUtil.timeStop?0:p_109705_, p_109706_, p_109707_, p_109708_);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void renderClouds(LevelRenderer renderer,PoseStack p_254145_, Matrix4f p_254537_, float p_254364_, double p_253843_, double p_253663_, double p_253795_){
+        renderer.renderClouds(p_254145_, p_254537_, EntityUtil.timeStop?0:p_254364_, p_253843_, p_253663_, p_253795_);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void render(ParticleEngine engine, PoseStack p_107337_, MultiBufferSource.BufferSource p_107338_, LightTexture p_107339_, Camera p_107340_, float p_107341_, @javax.annotation.Nullable Frustum clippingHelper){
+        engine.render(p_107337_, p_107338_, p_107339_, p_107340_,EntityUtil.timeStop?0:p_107341_, clippingHelper);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void setupGlintTexturing(float f){
+        long $$1;
+        if (EntityUtil.timeStop){
+            $$1=(long)((double)EntityUtil.timeStopMilliTime * Minecraft.getInstance().options.glintSpeed().get() * 8.0);
+        }else {
+            $$1=(long)((double)Util.getMillis() * Minecraft.getInstance().options.glintSpeed().get() * 8.0);
+        }
+        float $$2 = (float)($$1 % 110000L) / 110000.0F;
+        float $$3 = (float)($$1 % 30000L) / 30000.0F;
+        Matrix4f $$4 = (new Matrix4f()).translation(-$$2, $$3, 0.0F);
+        $$4.rotateZ(0.17453292F).scale(f);
+        RenderSystem.setTextureMatrix($$4);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void pollLightUpdates(ClientLevel level){
+        if (!EntityUtil.timeStop){
+            level.pollLightUpdates();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void render(Particle particle, VertexConsumer var1, Camera var2, float var3){
+        particle.render(var1,var2,EntityUtil.timeStop?0:var3);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void tick(SoundEngine engine,boolean val){
+        if (!EntityUtil.timeStop){
+            engine.tick(val);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void resume(SoundEngine engine){
+        if (!EntityUtil.timeStop){
+            engine.resume();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static WeakHashMap<SoundEngine,List<SoundInstance>> engineSounds;
+    static {
+        if (FMLLoader.getDist().isClient()){
+            engineSounds=new WeakHashMap<>();
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void play(SoundEngine engine, SoundInstance instance){
+        if (!EntityUtil.timeStop){
+            engine.play(instance);
+        }else {
+            //noinspection SynchronizeOnNonFinalField
+            synchronized (engineSounds){
+                engineSounds.computeIfAbsent(engine, k -> new LinkedList<>());
+                engineSounds.get(engine).add(instance);
+            }
+        }
+    }
+
+
+    public static int runLightUpdates(LightEventListener listener){
+        if (!EntityUtil.timeStop){
+            return listener.runLightUpdates();
+        }
+        return 0;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static int getLightColor(BlockAndTintGetter p_109538_, BlockState p_109539_, BlockPos p_109540_) {
+        int re=LevelRenderer.getLightColor(p_109538_,p_109539_,p_109540_);
+        if(EntityUtil.timeStop&&!p_109539_.emissiveRendering(p_109538_, p_109540_)){
+            re&=~0b11111111111111111111;
+            re|=p_109538_.getBrightness(LightLayer.BLOCK, p_109540_)<<4;
+        }
+        return re;
+    }
+
+    public static long getMillis(){
+        return Util.getMillis();
+    }
 }
